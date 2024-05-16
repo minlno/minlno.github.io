@@ -1,6 +1,6 @@
 baseURL = 'http://minlno.github.io/'
 languageCode = 'en-us'
-theme = 'anatole'
+theme = 'mainroad'
 enableEmoji = true
 
 [params]
