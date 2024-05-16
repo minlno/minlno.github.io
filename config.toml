@@ -1,0 +1,9 @@
+baseURL = 'http://minlno.github.io/'
+languageCode = 'en-us'
+theme = 'anatole'
+enableEmoji = true
+
+[params]
+title = "Minho's Web Site"
+author = "Minho Kim"
+description = "Minho's Web Site"
