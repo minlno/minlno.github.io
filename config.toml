@@ -6,19 +6,6 @@ enableEmoji = true
 [params]
 author = "Minho Kim"
 
-color = 'linen'
-
-github = 'minlno'
-rss = true
-
-name = 'Minho Kim'
-
-disableHLJS = true
-disablePostNavigation = true
-monoDarkIcon = true
-math = true
-localKatex = false
-
 [taxonomies]
-  category = "categories"
-  tag = "tags"
+category = "categories"
+tag = "tags"
