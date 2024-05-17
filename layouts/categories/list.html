@@ -1,6 +1,12 @@
 {{ define "main" }}
-    {{ range .Pages }}
-	<h2><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
-    {{ end }}
+    <main class="category">
+        <h1>{{ .Title }}</h1>
+        <ul>
+			{{ range .RegularPages}}
+                <li>
+                    <a href="{{ .Permalink }}">{{ .Title }}</a>
+                </li>
+            {{ end }}
+        </ul>
+    </main>
 {{ end }}
-

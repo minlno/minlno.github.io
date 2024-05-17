@@ -3,7 +3,8 @@ title: "Chapter 5 Boot Memory Allocator"
 date: 2024-05-17T02:10:54+09:00
 draft: false
 author: "Minho Kim"
-categories: ["Gorman's book Translation"]
+categories: ["Gorman Book Translation"]
+categories_weight: 5
 ---
 
 이 글은 Gorman 책 "Understanding the Linux Virtual Memory Manager"의 [Chapter 5](https://www.kernel.org/doc/gorman/html/understand/understand008.html)를 번역한 글입니다.

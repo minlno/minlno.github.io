@@ -3,7 +3,8 @@ title: "Chapter 2 Describing Physical Memory"
 date: 2024-05-17T02:10:54+09:00
 draft: false
 author: "Minho Kim"
-categories: ["Gorman's book Translation"]
+categories: ["Gorman Book Translation"]
+categories_weight: 2
 ---
 이 글은 Gorman 책 "Understanding the Linux Virtual Memory Manager"의 [Chapter 2](https://www.kernel.org/doc/gorman/html/understand/understand005.html)를 번역한 글입니다.
 

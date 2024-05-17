@@ -6,8 +6,15 @@
     <description>Recent content in Gorman&#39;s Book Translation on 김민호의 공부기록장</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-kr</language>
-    <lastBuildDate>Fri, 17 May 2024 02:10:54 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 18 May 2024 02:10:54 +0900</lastBuildDate>
     <atom:link href="http://localhost:1313/categories/gormans-book-translation/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Chapter 6 Physical Page Allocation</title>
+      <link>http://localhost:1313/gorman_%EB%B2%88%EC%97%AD/chapter_6/</link>
+      <pubDate>Sat, 18 May 2024 02:10:54 +0900</pubDate>
+      <guid>http://localhost:1313/gorman_%EB%B2%88%EC%97%AD/chapter_6/</guid>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 6를 번역한 글입니다.&#xA;이 챕터에서는 리눅스에서 물리 페이지들이 어떻게 관리되고 할당되는지를 설명한다. 이에 관련하여 사용되는 주요 알고리즘은 Binary Buddy Allocator로, Knowlton이 고안했고, Knuth가 발전시켰다. 이 알고리즘은 다른 할당자들과 비교하였을 때 굉장히 빠른 성능을 보여준다.</description>
+    </item>
     <item>
       <title>Chapter 2 Describing Physical Memory</title>
       <link>http://localhost:1313/gorman_%EB%B2%88%EC%97%AD/chapter_2/</link>
@@ -35,13 +42,6 @@
       <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
       <guid>http://localhost:1313/gorman_%EB%B2%88%EC%97%AD/chapter_5/</guid>
       <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 5를 번역한 글입니다.&#xA;하드웨어 구성의 조합의 수가 매우 많기 때문에, 컴파일 타임에 정적으로 핵심 커널 메모리 자료구조들을 초기화하는 것은 비현실적이다. 그러나 다음 장에서 설명할 물리 페이지 할당자조차도 자기자신을 초기화하기 위해 메모리를 할당해야한다. 그러나 어떻게 물리 페이지 할당자가 자기자신을 위한 메모리를 할당할 수 있겠는가.&#xA;이 문제를 해결하기위해, Boot Memory Allocator라고 불리는 특별한 할당자가 사용된다. 이것은 가장 기초적인 할당 방식인 First Fit 할당에 기반하며, free block의 연결 리스트 대신 비트맵을 사용하여 메모리를 표현한다.</description>
-    </item>
-    <item>
-      <title>Chapter 6 Boot Memory Allocator</title>
-      <link>http://localhost:1313/gorman_%EB%B2%88%EC%97%AD/chapter_6/</link>
-      <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
-      <guid>http://localhost:1313/gorman_%EB%B2%88%EC%97%AD/chapter_6/</guid>
-      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 6를 번역한 글입니다.</description>
     </item>
   </channel>
 </rss>

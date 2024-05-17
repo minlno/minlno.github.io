@@ -2,8 +2,8 @@ body {
     font-family: Arial, sans-serif;
     margin: 0px;
     padding: 0px;
-	margin-left: 300px;
-	margin-right:300px;
+	margin-left: 1px;
+	margin-right:1px;
     line-height: 1.6;
 }
 
@@ -29,12 +29,13 @@ header nav ul li a {
 }
 
 main {
-    padding: 2rem;
+    padding: 1rem;
 }
 
 footer {
     background: #333;
     color: #fff;
+
     text-align: center;
     padding: 1rem;
     position: fixed;
@@ -42,7 +43,12 @@ footer {
     bottom: 0;
 }
 
-.profile {
+.category {
+	margin-left: 10px;
+	margin-right:10px;
+}
+
+.profile{
   text-align: center;
   margin-top: 20px;
 }
@@ -60,8 +66,7 @@ footer {
   text-align: center;
   margin-top: 20px;
 }
-.post-content img {
-}
+
 .post-content figcaption {
   margin-top: 10px;
   font-style: italic;
