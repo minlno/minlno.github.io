@@ -1,5 +1,21 @@
 {{ define "main" }}
-<h1>공부 기록장</h1>
-<p> 나만의 웹사이트를 꾸며봅시다</p>
+  <div class="profile" style="text-align: center; margin-top: 20px;">
+	  <img src="{{ "images/JJang.jpg" | relURL }}" alt="Profile Picture" style="border-radius: 50%; width: 150px; height: 150px;">
+	  <h1>
+		  Minho Kim
+	      <a href="https://github.com/minlno" target="_blank" style="margin-left: 10px;">
+		    <i class="fab fa-github" style="font-size: 30px;"></i>
+	      </a>
+	  </h1>
+	  <p>커널 개발자가 되고 싶은 대학원생입니다!</p>
+  </div>
+  <div class="profile" style="text-align: center; margin-top: 20px;">
+    <h1>글 목록</h1>
+    <ul>
+      {{ range .Site.Taxonomies.categories }}
+          <a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a>
+          ({{ .Count }})
+      {{ end }}
+    </ul>
+  </div>
 {{ end }}
-

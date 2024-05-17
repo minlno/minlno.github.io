@@ -22,24 +22,15 @@ categories: ["Gorman's book Translation"]
 
 PGD 테이블의 유효한 엔트리는 pmd_t 타입의 PMD (Page Middle Directory) 엔트리의 배열을 포함하는 페이지 프레임을 가리키며, PMD 엔트리는 다시 pte_t 타입의 PTE (Page Table Entry) 엔트리의 배열을 포함하는 페이지 프레임을 가리키며, PTE 엔트리는 최종적으로 실제 유저 데이터를 포함하는 페이지 프레임을 가리킨다. 스토리지로 페이지가 스왑 아웃되는 경우에는, PTE에 swap entry가 저장되며, 페이지 폴트 처리시에 do_swap_page()가 페이지의 데이터를 저장하고 있는 swap entry를 찾는데에 사용한다. 페이지 테이블의 레이아웃은 Figure 3.1에 나타나있다.
 
-![Figure 3.1](https://velog.velcdn.com/images/minlno/post/d6aac12c-b9fb-4788-9c96-fd8e4d6fb938/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 3.1: Page Table Layout
-</figcaption>
+![Figure 3.1](https://velog.velcdn.com/images/minlno/post/d6aac12c-b9fb-4788-9c96-fd8e4d6fb938/image.png "Figure 3.1: Page Table Layout")
 
 주어진 linear address의 각 부분들은 세 레벨의 페이지 테이블 또는 실제 페이지 내에서의 오프셋을 나타내도록 쪼개진다. linear address를 쪼개는 과정을 쉽게 할 수 있도록, SHIFT, SIZE, 그리고 MASK 매크로가 각 페이지 테이블 레벨마다 제공된다. Figure 3.2에 나와있듯이, SHIFT 매크로는 각 페이지 테이블 레벨에 의해 매핑된 비트의 길이를 지정한다.
 
-![Figure 3.2](https://velog.velcdn.com/images/minlno/post/1c3b4371-851b-4544-a319-647a357b1975/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 3.2: Linear Address Bit Size Macros
-</figcaption>
+![Figure 3.2](https://velog.velcdn.com/images/minlno/post/1c3b4371-851b-4544-a319-647a357b1975/image.png "Figure 3.2: Linear Address Bit Size Macros")
 
 MASK는 linear address와 AND 연산을 취함으로써 모든 상위 비트를 마스킹할 수 있으며, linear address가 페이지 테이블 레벨에 맞게 align 되어있는 지를 판단할 때 자주 사용된다. SIZE 매크로는 각 레벨의 개별 엔트리가 매핑할 수 있는 영역의 크기를 바이트 단위로 나타낸다. SIZE와 MASK 매크로의 관계는 Figure 3.3에 나타나있다.
 
-![Figure 3.3](https://velog.velcdn.com/images/minlno/post/3bd1075e-a5cc-483e-a154-bda52956aa09/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 3.3: Linear Address Size and Mask Macros
-</figcaption>
+![Figure 3.3](https://velog.velcdn.com/images/minlno/post/3bd1075e-a5cc-483e-a154-bda52956aa09/image.png "Figure 3.3: Linear Address Size and Mask Macros")
 
 세 값을 계산할 때는 오직 SHIFT 값만이 중요한데, 그 이유는 나머지 두 값은 SHIFT 값을 기반으로 계산되기 때문이다. 예를 들어, x86에서 page level을 위한 세 매크로든 다음과 같다:
 ```c
@@ -63,6 +54,7 @@ type casting을 위해, asm/page.h에 4개의 매크로가 제공되는데, 이�
 
 정확히 어느 위치에 protection bit들이 저장되는 지는 아키텍처에 의존적이다. 설명을 위해 우리는 PAE가 enable되지 않은 x86 아키텍처를 가정하고 설명하겠지만, 모든 아키텍처에 같은 원리가 적용된다. PAE가 없는 x86에서, pte_t는 단순히 32비트 정수 하나로 구성된 구조체이다. 각 pte_t는 페이지 프레임의 주소를 가리키며, 가리키는 주소는 page aligned 됨을 보장받는다. 그러므로, 페이지 테이블 엔트리의 32비트 중에서 PAGE_SHIFT (12) 비트는 status 비트를 저장하는데 사용할 수 있다. protection과 status 비트는 Table 3.1에 나열되어 있으나, 어떤 비트가 실재하고 무엇을 의미하는 지는 아키텍처마다 다를 수 있다.
 
+{{< table title="Table 3.1: Page Table Entry Protection and Status Bits" >}}
 **Bit** | **Function**
 --- | ---
 \_PAGE_PRESENT | 페이지가 메모리에 존재하고 스왑 아웃되지 않았다면 set됨
@@ -71,10 +63,8 @@ type casting을 위해, asm/page.h에 4개의 매크로가 제공되는데, 이�
 \_PAGE_USER | 유저 공간에서 접근 가능하면 set됨
 \_PAGE_DIRTY | 페이지가 수정되면 set됨
 \_PAGE_ACCESSED | 페이지가 접근되면 set됨
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:10px">
-    Table 3.1: Page Table Entry Protection and Status Bits
-</figcaption>
-
+{{< /table >}}
+    
 더 논의할 \_PAGE_PROTNONE을 제외하면 이름을 통해 그 의미를 알 수 있다. Pentium III 이전의 아키텍처에서는 reserved 비트였던 이 비트는 Pletium III 또는 그 이상의 x86에서 PAT (Page Attribute Table)이라고 불린다. PAT 비트는 PTE가 참조하는 페이지의 크기를 나타내는 데 사용된다. PGD 엔트리에서 같은 비트를 PSE (Page Size Exception) 비트라고 부르며, 이 비트들은 함께 사용되도록 의도되어졌다.
 
 리눅스는 PSE 비트를 유저 페이지에 대해 사용하지 않기 때문에, PTE의 PAT 비트는 다른 목적으로 사용이 가능하다. PROT_NONE flag로 mprotect()를 수행하여 보호되는 영역처럼, 메모리에 상주하지만 유저 공간에서는 접근할 수 없는 페이지가 필요하다. 어떤 영역이 보호되어야 한다면, \_PAGE_PRESENT 비트는 clear되고 \_PAGE_PROTNONE 비트가 set된다. pte_present() 매크로는 두 비트 중 하나라도 set 되었는 지를 체크하기 때문에, 유저 공간에서 접근 불가능하더라도 커널은 PTE가 present함을 알 수 있는데, 이는 미묘하지만 중요한 사실이다. 하드웨어 비트인 \_PAGE_PRESENT가 clear 되었기 때문에, 해당 페이지에 접근이 발생하면 page fault가 발생한다. 이를 이용하여 리눅스는 스왑 아웃이 필요하거나 프로세스가 종료하면, 페이지를 메모리에 상주시키면서도 protection을 강제할 수 있다.
@@ -162,10 +152,7 @@ arch/i386/kernel/head.S에 있는 어셈블러 함수인 startup_32()가 페이�
 
 paging_init()은 페이지 테이블의 완성을 담당하는 함수이다. x86에서 이 함수의 call graph는 Figure 3.4에서 볼 수 있다.
 
-![Figure 3.4](https://velog.velcdn.com/images/minlno/post/9f5f223b-01ee-4986-947c-afeeabf65563/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 3.4: Call Graph: paging_init()
-</figcaption>
+![Figure 3.4](https://velog.velcdn.com/images/minlno/post/9f5f223b-01ee-4986-947c-afeeabf65563/image.png "Figure 3.4: Call Graph: paging_init()")
 
 이 함수는 먼저 pagetable_init()을 호출하여, ZONE_DMA와 ZONE_NORMAL의 모든 물리 메모리의 접근에 필요한 페이지 테이블을 초기화한다. ZONE_HIGHMEM에 해당하는 메모리는 직접 접근될 수 없으므로, 이에 대한 매핑은 임시적으로 설정된다는 것을 기억하라. 커널의 각 pgd_t에 대해서, boot memory allocator를 호출하여 PMD 테이블을 위한 페이지를 할당하며, PSE 비트가 지원되면 이 비트를 설정하여 4KiB대신 4MiB TLB 엔트리를 사용한다. 만약 PSE 비트가 지원되지 않는 경우, 각 pmd_t 엔트리에 대해서 PTE 테이블 페이지가 할당될 것이다. 만약 CPU가 PGE flag를 지원할 경우, 이 비트 또한 설정되어, 페이지 테이블 엔트리를 모든 프로세스들이 볼 수 있게 만든다.
 
@@ -215,19 +202,21 @@ virt_to_page() 매크로는 가상 주소인 kaddr를 인자로 받아, \_\_pa()
 
 TLB API hook들은 대부분 <asm/pgtable.h>에 선언되며, Table 3.2와 Table 3.3에서 확인할 수 있다. 또한 API들은 Documentation/cachetlb.txt에 잘 설명되어 있다. 단 하나의 TLB flush 함수만을 사용하는 것도 가능은 하지만, TLB flush와 TLB refill은 굉장히 비싼 작업이기 때문에, 가능하다면 불필요한 TLB flush는 무조건 피해야한다. 예를 들어, context switch 과정에서, 리눅스는 4.3절에서 더 논의될 **Lazy TLB Flushing** 기법을 사용하여 새로운 페이지 테이블을 TLB에 로드하는 것을 미루려고 할 것이다.
 
+{{< table title="Table 3.2: Translation Lookaside Buffer Flush API" >}}
 함수 | 설명
 --- | ---
 void flush_tlb_all(void) | 가장 비싼 TLB flush 작업으로, 시스템의 모든 프로세서들의 TLB 전체를 flush한다. 작업이 완료되면, 페이지 테이블에 대한 모든 수정이 global하게 동기화된다. vfree() 또는 PKMap의 flush 이후 커널 페이지 테이블이 수정된 경우, 전역에서 접근가능한 테이블이기 때문에 이 함수가 필요하다. |
 void flush_tlb_mm(struct mm_struct \*mm) | 인자로 받은 mm_struct의 유저 공간 부분 (PAGE_OFFSET 밑의 주소)에 해당하는 모든 TLB 엔트리를 flush한다. MIPS와 같은 몇몇 아키텍처에서는 모든 프로세서에 대해 flush를 해야하지만, 대부분은 로컬 프로세서에 대해서만 수행한다. fork를 위해 dup_mmap()이 모든 주소 매핑을 복제했거나, exit_mmap()에 의해 모든 매핑이 삭제된 경우와 같이, 전체 주소 공간에 영향을 주는 작업이 수행된 경우에만 이 함수가 호출된다. |
 void flush_tlb_range(struct mm_struct \*mm, unsigned long start, unsigned long end) | 이름에서 알 수 있듯이, 이 함수는 mm의 주어진 주소 범위에 해당하는 엔트리들을 flush한다. mremap()이 region을 옮겼거나, mprotect()가 권한을 변경한 경우처럼, 일부 region이 옮겨졌거나 변경된 경우 이를 사용한다. munmap()으로 region을 unmap하는 경우 tlb_finish_mmu()를 호출하는데, 이는 flush_tlb_range()를 똑똑하게 사용하기 위해 노력한다. 이 API는 단순히 flush_tlb_page()를 반복하는 것보다 특정 범위의 TLB 엔트리들을 flush하는 것이 더 빠른 아키텍처에서만 제공된다. |
-<figcaption> Table 3.2: Translation Lookaside Buffer Flush API </figcaption>
+{{< /table >}}
 
+{{< table title="Table 3.3: Translation Lookaside Buffer Flush API (cont) " >}}
 함수 | 설명
 --- | ---
 void flush_tlb_page(struct vm_area_struct \*vma, unsigned long addr) | 예상했겠지만, 이 API는 TLB에서 한 페이지를 flush한다. 가장 많이 사용하는 두가지 케이스가 존재하는데, 하나는 page fault가 발생한 경우이고, 나머지는 page out된 경우이다. |
 void flush_tlb_pgtables(struct mm_struct \*mm, unsigned long start, unsigned long end) | 이 API는 페이지 테이블이 해체되고 해제될 때 호출된다. 일부 플랫폼에서는 가장 낮은 레벨의 페이지 테이블 (i.e. PTE 테이블을 저장하는 페이지) 자체를 캐싱하는데, 해당 페이지들이 삭제된다면 이또한 flush되어야 한다. region이 unmap되거나, 페이지 디렉토리 엔트리들이 회수되는 경우 이 함수가 호출된다. |
 void update_mmu_cache(struct vm_area_struct \*vma, unsigned long addr, pte_t pte) | 이 API는 page fault가 완료된 후에만 호출된다. 이는 아키텍저 의존적인 코드에게 pte에 가상 주소 addr에 대한 변환이 저장되었음을 알려준다. 이 정보를 어떻게 사용할 지는 아키텍처가 결정한다. Sparc64의 경우, 이 정보를 사용하여 로컬 CPU가 D-Cache를 flush 해야하는 지, 또는 원격 프로세서에 IPI를 전송해야하는 지를 결정한다. |
-<figcaption> Table 3.3: Translation Lookaside Buffer Flush API (cont) </figcaption>
+{{< /table >}}
 
 ## 3.9 Level 1 CPU Cache Management
 
@@ -244,25 +233,28 @@ CPU cache는 **라인**으로 구성된다. 각 라인은 보통 32 바이트로
 
 어떤 아키텍처는 TLB을 자동으로 관리하지 않는 것처럼, 일부는 그들의 CPU cache를 자동으로 관리하지 않는다. 따라서 TLB와 마찬가지로 캐시 관리를 위한 hook을 사용하는데, 이들은 페이지 테이블을 업데이트하는 것과 같이, 가상/물리 주소 매핑이 변경되었을 때 사용된다. 일부 CPU는 캐시에서 가상 주소가 flush될 때 가상/물리 주소 매핑이 필요하므로, 캐시 flush는 항상 먼저 수행되어야 한다. 적절한 순서가 중요한 세가지 작업은 Table 3.4에 나열되어 있다.
 
+{{< table title="Table 3.4: Cache and TLB Flush Ordering" >}}
 Flushing Full MM | Flushing Range | Flushing Page
 --- | --- | --- 
 flush_cache_mm() | flush cache_range() | flush_cache_page()
 모든 페이지 테이블을 수정 | 페이지 테이블 범위를 수정 | PTE 1개 수정
 flush_tlb_mm() | flush_tlb_range() | flush_tlb_page()
-<figcaption> Table 3.4: Cache and TLB Flush Ordering </figcaption>
+{{< /table >}}
 
 캐시를 flush하는 데 사용되는 API는 <asm/pgtable.h>에 선언되어 있으며, Table 3.5에 나열되어 있다. 여러 측면에서 이 API는 TLB flush API와 매우 유사하다.
 
+{{< table title="Table 3.5: CPU Cache Flush API" >}}
 함수 | 설명
 --- | ---
 void flush_cache_all(void) | 가장 비싼 캐시 flush API로, 시스템의 모든 CPU cache를 flush한다. 커널 페이지 테이블에 대한 수정이 필요한 경우 사용된다.
 void flush_cache_mm(struct mm_struct mm) | 특정 주소 공간에 대한 모든 캐시라인을 flush한다. 작업 완료 후에 mm과 관련된 캐시라인은 없을 것이다.
 void flush_cache_range(struct mm_struct \*mm, unsigned long start, unsigned long end) | 주소 공간의 주어진 범위에 해당하는 캐시라인을 flush한다. TLB와 마찬가지로, 개별 페이지에 대한 flush보다 범위에 대한 flush가 더 빠를 때에만 이 API가 제공된다.
 void flush_cache_page(struct vm_area_struct \*vma, unsigned long vmaddr) | 한 페이지에 속한 캐시라인만 flush한다. vma->vm_mm을 통해서 mm_struct를 쉽게 접근할 수 있기 때문에 VMA를 인자로 받는다. 추가적으로, VM_EXEC flag를 테스트하여 명령어를 위한 캐시와 데이터를 위한 캐시를 구분하는 아키텍처가 해당 영역이 실행가능한 지를 판단할 수 있게 해준다. VMA는 4장에서 더 자세히 다룬다.
-<figcaption> Table 3.5: CPU Cache Flush API </figcaption>
+{{< /table >}}
 
 여기서 끝이 아니다. virtual aliasing 문제를 피하기 위해서는 추가적인 API들이 필요하다. 캐시라인을 가상 주소 기반으로 매핑하는 경우, 한 물리 주소에 대해서 여러 캐시라인이 존재할 수 있게되는데, 이로 인한 캐시 일관성 문제를 virtual aliasing 문제라고 한다. 이 문제가 있는 아키텍처는 shared mapping이 주소를 임시 조치로만 사용하도록 보장하려고 시도할 수도 있다. 그러나, 이 문제를 다루기 위한 적절한 API 또한 제공되며, Table 3.6에서 확인할 수 있다.
 
+{{< table title="Table 3.6: CPU D-Cache and I-Cache Flush API" >}}
 함수 | 설명
 --- | ---
 void flush_page_to_ram(unsigned long address) | 2.6부터 완전히 제거되어 더이상 사용되지 않는 낡은 API이다. 여기서 다루는 이유는 이전 버전에서는 여전히 사용되기 때문이다. 이 함수는 새로운 물리 페이지가 프로세스의 주소공간에 매핑되려고 할 때 사용된다. 매핑이 발생한 후 커널 공간에서의 쓰기가 유저 공간에서 보이지 않는 것을 방지하기 위해 이 API가 요구된다. 
@@ -270,7 +262,7 @@ void flush_dcache_page(struct page \*page) | 커널이 page cache를 쓰거나 �
 void flush_icache_range(unsigned long address, unsigned long endaddr) | 커널 모듈이 로드된 경우와 같이, 커널이 실행될 가능성이 높은 데이터를 쓴 경우 이 API를 호출한다.
 void flush_icache_user_range(struct vm_area_struct \*vma, struct page \*page, unsigned long addr, int len) | 유저 공간이 영향을 받았을 때 호출된다는 것을 제외하고는 flush_icache_range()와 유사하다. 현재, 이것은 ptrace()에서 주소 공간이 access_process_vm()에 의해 접근되는 경우에만 사용된다.
 void flush_icache_page(struct vm_area_struct \*vma, struct page \*page) | page cache가 매핑되려고 할 때 호출된다. 일부 아키텍처는 VMA flag를 사용하여 I-Cache와 D-Cache 중 어떤 것을 flush할 지 결정한다.
-<figcaption> Table 3.6: CPU D-Cache and I-Cache Flush API </figcaption>
+{{< /table >}}
 
 ## 3.10 What's New In 2.6
 

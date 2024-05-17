@@ -99,8 +99,7 @@ mapsize = ((end_pfn - start_pfn) + 7) / 8
 ## 5.3 Allocating Memory
 
 reserve_bootmem() 또한 사용할 페이지를 예약하기위해 사용될 수 있지만, 이는 범용적인 할당을 위해서는 사용하기 매우 번거롭다. UMA 아키텍처의 경우 쉬운 할당을 위해 alloc_bootmem(), alloc_bootmem_low(), alloc_bootmem_pages() 그리고 alloc_bootmem_low_pages() 함수가 제공되며, Table 5.1에 설명이 나와있다. 이 함수들의 call graph가 Figure 5.1에 나와있다.
-![](https://velog.velcdn.com/images/minlno/post/0a5db7e6-078d-400b-bfed-a4c5698dc895/image.png)
-<figcaption> Figure 5.1: Call Graph: alloc_bootmem() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/0a5db7e6-078d-400b-bfed-a4c5698dc895/image.png "Figure 5.1: Call Graph: alloc_bootmem()")
 NUMA에도 노드를 추가 인자로 받는 비슷한 함수들이 존재하며, Table 5.2에 나와있다. 이들은 alloc_bootmem_node(), alloc_bootmem_pages_node() 그리고 alloc_bootmem_low_pages_node()라고 불리며, 모두 \_\_alloc_bootmem_node()를 서로 다른 인자를 통해 호출하게된다.
 
 \_\_alloc_bootmem()과 \_\_alloc_bootmem_node()가 받는 인자는 본질적으로 동일하다:
@@ -128,8 +127,7 @@ free 함수의 중요한 제약 사항은 오로지 전체 페이지만 해제�
 ## 5.5 Retiring the Boot Memory Allocator
 
 Bootstrapping 프로세스의 후반부에, start_kernel() 함수가 호출되는데, 이때는 boot allocator와 관련 자료구조들을 모두 삭제해도 안전하다. 각 아키텍처들은 boot memory allocator와 관련 자료구조들을 제거하는 함수인 mem_init()을 제공할 의무가 있다.
-![](https://velog.velcdn.com/images/minlno/post/39977de6-48ce-4ece-b312-a78db65073d1/image.png)
-<figcaption> Figure 5.2: Call Graph: mem_init() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/39977de6-48ce-4ece-b312-a78db65073d1/image.png "Figure 5.2: Call Graph: mem_init()")
 
 이 함수의 목적은 꽤 단순하다. low와 high memory의 dimension들을 계산하고, 관련 정보를 유저에게 출력하며, 필요한 경우 하드웨어의 최종 초기화 작업을 수행한다. x86에서, VM과 관련이 있는 주요 함수는 free_pages_init()이다.
 
@@ -141,8 +139,7 @@ Bootstrapping 프로세스의 후반부에, start_kernel() 함수가 호출되�
 - 비트맵을 위해 사용되고 있던 모든 페이지들을 해제하고 buddy allocator에게 준다.
 
 이 단계에서, buddy allocator는 이제 low memory의 모든 페이지에 대한 제어권을 가진다. free_all_bootmem()이 반환한 이후에는, accounting 목적으로 reserved page들의 수를 먼저 카운팅한다. free_pages_init() 함수의 나머지는 high memory page들에 대한 것이다. 그러나, 이 시점에서 global mem_map 배열이 어떻게 할당되고 초기화되며 main allocator에게 페이지가 주어지는 지를 명백히 알아야 한다. 싱글 노드 시스템에서 low memory의 페이지들을 초기화하는 기본 플로우가 Figure 5.3에 나타나있다.
-![](https://velog.velcdn.com/images/minlno/post/9538c743-d256-4fbe-9fcc-70b8f13b5383/image.png)
-<figcaption> Figure 5.3: Initialising mem_map and the Main Physical Page Allocator </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/9538c743-d256-4fbe-9fcc-70b8f13b5383/image.png "Figure 5.3: Initialising mem_map and the Main Physical Page Allocator")
 
 free_all_bootmem()이 반환하고나면, ZONE_NORMAL의 모든 페이지가 버디 할당자에게 반환된다. high memory 페이지들을 초기화하기위해, free_pages_init()은 highstart_pfn부터 highend_pfn 사이의 모든 페이지에 대해 one_highpage_init() 함수를 호출한다. one_highpage_init()은 단순히 PG_reserved 플래그를 클리어하고, PG_highmem 플래그를 set하며, count를 1로 설정하고, \_\_free_pages()를 호출하여 이 페이지를 free_all_bootmem_core()가 그랬던 것처럼 버디 할당자에게 반환한다.
 

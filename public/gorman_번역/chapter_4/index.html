@@ -1,26 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chapter 4 Process Address Space</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
+    <title>김민호의 공부기록장</title>
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/">홈</a></li>
-                <li><a href="/categories/">목차</a></li>
-            </ul>
-        </nav>
-    </header>
+
+</head>
+<body>
     <main>
         
 <article>
     <h1>Chapter 4 Process Address Space</h1>
     <p><small>2024-05-17</small></p>
-    <div>
+    <div class="post-content">
         <p>이 글은 Gorman 책 &ldquo;Understanding the Linux Virtual Memory Manager&quot;의 <a href="https://www.kernel.org/doc/gorman/html/understand/understand007.html">Chapter 4</a>를 번역한 글입니다.</p>
 <hr>
 <p>가상 메모리의 주요 이점 중 하나는 각각의 프로세스들이 물리 메모리에 매핑되는 자신만의 가상 주소 공간을 가진다는 것이다. 이 장에서 우리는 프로세스의 주소 공간과 리눅스가 이것을 관리하는 방법에 대해 다룰 것이다.</p>
@@ -29,8 +28,13 @@
 <p>이 장은 linear address space가 어떻게 구성되어있는 지, 각 요소의 목적이 무엇인 지에 대해 먼저 설명한다. 그런 다음 각 프로세스를 설명하기 위한 구조체들과, 그들이 어떻게 할당, 초기화, 해제되는 지를 다룬다. 다음으로, 우리는 프로세스 공간의 개별 영역들이 어떻게 생성되며 이와 관련된 함수들에는 무엇이 있는 지를 알려줄 것이다. 내용은 프로세스 주소 공간의 예외 처리, 페이지 폴트, 페이지 폴트를 해결하기 위해 발생하는 다양한 상황들로 이어진다. 마지막으로, 우리는 커널이 유저 공간으로부터 데이터를 어떻게 안전하게 주고받는 지를 설명할 것이다.</p>
 <h2 id="41-linear-address-space">4.1 Linear Address Space</h2>
 <p>유저 관점에서 주소공간은 그저 평평한 선형 주소 공간일 뿐이다. 그러나 예측할 수 있듯이, 커널의 관점은 많이 다르다. 주소 공간은 컨텍스트 스위치가 발생할 때마다 바뀔 수 있는 유저 영역과, 항상 동일한 커널 영역으로 나뉜다. 나뉘는 지점은 PAGE_OFFSET 값으로 결정되며, x86에서 이 값은 0xC0000000이다. 이것은 3GiB는 프로세스가 이용가능하고, 나머지 1GiB는 항상 커널에 의해 매핑된다는 것을 의미한다. 커널 관점에서의 linear address space는 Figure 4.1에 나와있다.</p>
-<p><img src="https://velog.velcdn.com/images/minlno/post/0a5835e3-4c91-4392-94a5-8fd722cd181b/image.png" alt="Figure 4.1"></p>
-<!-- raw HTML omitted -->
+<p>
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/0a5835e3-4c91-4392-94a5-8fd722cd181b/image.png" alt="Figure 4.1">
+    <figcaption>Figure 4.1: Kernel Address Space</figcaption>
+  </figure>
+
+</p>
 <p>PAGE_OFFSET의 시작 부분에는 실행할 커널 이미지를 로드하기위해 8MiB의 메모리가 예약된다. 8MiB는 단지 커널 이미지 로드를 위해 적절한 양으로 결정된 크기다. 3.6.1절에서 설명했듯이, 커널 이미지는 커널 페이지 테이블의 초기화 과정에서 해당 공간에 로드된다. 2절에서 말했듯이 커널 이미지 거의 바로 뒤에는, UMA 아키텍처의 경우, mem_map 배열이 저장된다. 해당 배열은 보통 ZONE_DMA을 사용하지 않기 위해 16MiB 위치에 저장된다. NUMA 아키텍처의 경우, 가상 mem_map의 일부분들이 이 영역에 흩뿌려져 있으며, 정확한 위치는 아키텍처마다 다르다.</p>
 <p>PAGE_OFFSET과 VMALLOC_START - VMALLOC_OFFSET 사이의 영역은 물리 메모리 맵을 담고있다. 이 영역의 크기는 이용가능한 RAM의 양에 의해 결정된다. 3.6절에서 보았듯이, PAGE_OFFSET부터 시작하는 가상 주소 범위를 물리 메모리에 매핑하는 PTE들이 존재한다. 물리 메모리 맵과 vmalloc 주소 공간 사이에는 out of bound 에러를 막기위해 VMALLOC_OFFSET  (x86의 경우 8MiB) 만큼의 틈이 존재한다. 예를 들어, 32MiB의 RAM이 있는 x86의 경우, VMALLOC_START는 PAGE_OFFSET + 0x02000000 + 0x00800000에 위치한다.</p>
 <p>저메모리 시스템의 경우, 가상 주소 공간의 나머지에서 2개의 페이지만큼의 크기를 제외한 부분은, 연속된 가상 주소 공간에 대해 비연속적인 메모리 할당을 제공하는 vmalloc()에 의해 사용된다. 고메모리 시스템의 경우, PKMAP_BASE - 2*PAGE_SIZE까지만 vmalloc 영역으로 사용되고, 그 이후는 두가지 영역으로 사용된다. 첫번째는 PKMAP_BASE에서 시작하는데, kmap()을 통해 high memory 페이지들을 low memory에 매핑하기 위한 영역이며, 9장에서 더 자세히 논의한다. 두번째는 fixed virtual address mapping (고정 가상 주소 매핑)으로 FIXADDR_START에서 FIXADDR_TOP까지의 영역을 차지한다. 고정 가상 주소는 APIC (Advanced Programmable Interrupt Controller)처럼 컴파일 타임에 가상 주소를 알아야하는 경우에 필요하다. FIXADDR_TOP은 x86에서 0xFFFFE000으로 정적으로 정의되며, 이는 가상 주소의 끝에서 페이지 한 개의 크기만큼 뺀 값이다. 고정 매핑 영역의 크기는 컴파일 타임에 __FIXADDR_SIZE에 계산되며, FIXADDR_TOP에서 빼서 FIXADDR_START를 계산하는 데 사용된다.</p>
@@ -40,9 +44,31 @@
 <p>각 주소 공간은 page 크기로 align된 사용중인 메모리 region들로 구성된다. 그들은 절대 겹치지 않으며, 권한과 목적의 관점에서 서로 관련이 있는 페이지들의 묶음을 나타낸다. 이들은 struct vm_area_struct로 표현되며 BSD의 vm_map_entry 구조체와 유사하다. vm_area_struct로 묶이는 region으로는, malloc()으로 할당되는 프로세스 힙, shared library처럼 메모리 매핑된 파일, 또는 mmap()으로 할당된 anonymous memory 등이 있다. 이 region에 포함된 페이지들은 아직 할당되지 않았을 수도 있고, 메모리에 할당되어 active하게 사용중일 수도 있고, 아니면 할당되었다가 page out되었을 수도 있다.</p>
 <p>만약 region이 파일로 백업되어 있다면, 이것의 vm_file 필드는 유효한 값을 저장하고 있을 것이다. vm_file-&gt;f_dentry-&gt;d_inode-&gt;i_mapping을 통해 해당 region과 관련된 address_space 구조체를 얻을 수 있다. address_space 구조체는 디스크에 대한 페이지 기반의 작업을 수행하는데 필요한 모든 파일시스템 관련 정보를 포함한다.</p>
 <p>주소 공간과 관련된 구조체들 사이의 관계를 Figure 4.2에서 볼 수 있다. 주소 공관과 region들에 영향을 주는 시스템 콜들이 존재하며, 이는 Table 4.1에 나와있다.</p>
-<p><img src="https://velog.velcdn.com/images/minlno/post/a3ed28ff-312d-4e74-9090-6dc0acb551c2/image.png" alt="Figure 4.2"></p>
-<!-- raw HTML omitted -->
-<table>
+<p>
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/a3ed28ff-312d-4e74-9090-6dc0acb551c2/image.png" alt="Figure 4.2">
+    <figcaption>Figure 4.2: Data Structures related to the Address Space</figcaption>
+  </figure>
+
+</p>
+
+
+
+
+
+
+  
+  
+  
+
+
+  
+
+
+
+
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-879342651">
+  <table class="table " id="879342651" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-879342651" itemprop="about">Table 4.1: System Calls Related to Memory Regions</caption>
 <thead>
 <tr>
 <th>시스템 콜</th>
@@ -84,7 +110,9 @@
 </tr>
 </tbody>
 </table>
-<!-- raw HTML omitted -->
+
+</div>
+
 <h2 id="43-process-address-space-descriptor">4.3 Process Address Space Descriptor</h2>
 <p>프로세스 주소 공간은 mm_struct 구조체를 통해 표현된다. 즉, mm_struct는 프로세스마다 하나씩만 존재하며, 유저스페이스 스레드끼리 공유한다. 실제로 스레드들은 같은 mm_struct를 가리키는 모든 task_struct를 찾아서 task list에서 식별된다.</p>
 <p>커널 스레드는 페이지 폴트를 일으키지 않거나 유저 공간에 접근하지 않을 것이기 때문에, 자신만의 mm_struct를 가질 필요가 없다. 한 가지 예외는 vmalloc 공간에 대한 페이지 폴트이다. 페이지 폴트 핸들링 코드에서는 이 상황을 특수 케이스로 다루며, 현재 페이지 테이블을 master 페이지 테이블의 정보로 업데이트한다. 커널 스레드는 mm_struct가 필요하지 않기때문에, task_struct-&gt;mm 필드는 항상 NULL이다. boot idle task와 같은 일부 태스크는 mm_struct를 절대 setup하지 않지만, 커널 스레드들은 daemonize()를 호출하여 exit_mm()을 호출하고, 이는 mm_struct의 usage counter를 감소시킨다.</p>
@@ -93,33 +121,33 @@
 <p>mm_struct는 두 타입의 &ldquo;유저&quot;들을 위해 mm_users, mm_count라고 불리는 참조 카운터를 가진다. mm_users는 페이지 테이블이나 파일 매핑처럼 mm_struct의 유저 공간 부분에 접근하는 프로세스들의 참조 횟수이다. 스레드와 swap_out()와 같은 코드는 이 카운터를 증가시켜서 mm_struct가 삭제되지 않도록 막을 것이다. 카운터 값이 0으로 떨어지면, mm_count를 감소시키기 전에 exit_mmap()이 모든 매핑을 삭제하고 페이지 테이블을 해체할 것이다.</p>
 <p>mm_count는 &ldquo;real&rdquo; 유저가 존재하면 1로 초기화되며, 그 이후부터는 &ldquo;anonymous users&quot;의 참조 카운트로 작동한다. anonymous user는 유저 가상 주소 공간에는 관심이 없고, 단순히 mm_struct를 빌리고자 하는 유저를 말한다. 예시로는 lazy TLB switching을 사용하는 커널 스레드가 있다. 이 카운트가 0으로 떨어지면, mm_struct는 안전하게 삭제될 수 있다. mm_count가 필요한 이유는 anonymous user는 mm_struct와 관련된 모든 유저 매핑이 삭제되어 페이지 테이블을 해체해도 상관이 없더라도 mm_struct를 필요로 하기 때문이다.</p>
 <p>mm_struct는 &lt;linux/sched.h&gt;에 아래와 같이 정의되어있다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">206</span> <span style="color:#66d9ef">struct</span> mm_struct {
-<span style="color:#ae81ff">207</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> mmap;
-<span style="color:#ae81ff">208</span>     rb_root_t mm_rb;
-<span style="color:#ae81ff">209</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> mmap_cache;
-<span style="color:#ae81ff">210</span>     pgd_t <span style="color:#f92672">*</span> pgd;
-<span style="color:#ae81ff">211</span>     atomic_t mm_users;
-<span style="color:#ae81ff">212</span>     atomic_t mm_count;
-<span style="color:#ae81ff">213</span>     <span style="color:#66d9ef">int</span> map_count;
-<span style="color:#ae81ff">214</span>     <span style="color:#66d9ef">struct</span> rw_semaphore mmap_sem;
-<span style="color:#ae81ff">215</span>     spinlock_t page_table_lock;
-<span style="color:#ae81ff">216</span> 
-<span style="color:#ae81ff">217</span>     <span style="color:#66d9ef">struct</span> list_head mmlist;
-<span style="color:#ae81ff">221</span> 
-<span style="color:#ae81ff">222</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> start_code, end_code, start_data, end_data;
-<span style="color:#ae81ff">223</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> start_brk, brk, start_stack;
-<span style="color:#ae81ff">224</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> arg_start, arg_end, env_start, env_end;
-<span style="color:#ae81ff">225</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> rss, total_vm, locked_vm;
-<span style="color:#ae81ff">226</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> def_flags;
-<span style="color:#ae81ff">227</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> cpu_vm_mask;
-<span style="color:#ae81ff">228</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> swap_address;
-<span style="color:#ae81ff">229</span> 
-<span style="color:#ae81ff">230</span>     <span style="color:#66d9ef">unsigned</span> dumpable:<span style="color:#ae81ff">1</span>;
-<span style="color:#ae81ff">231</span> 
-<span style="color:#ae81ff">232</span>     <span style="color:#75715e">/* Architecture-specific MM context */</span>
-<span style="color:#ae81ff">233</span>     mm_context_t context;
-<span style="color:#ae81ff">234</span> };
-</code></pre></div><p>크기가 큰 이 구조체의 각 필드의 의미는 아래와 같다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">206</span> <span style="color:#66d9ef">struct</span> mm_struct {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">207</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> mmap;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">208</span>     <span style="color:#66d9ef">rb_root_t</span> mm_rb;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">209</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> mmap_cache;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">210</span>     <span style="color:#66d9ef">pgd_t</span> <span style="color:#f92672">*</span> pgd;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">211</span>     <span style="color:#66d9ef">atomic_t</span> mm_users;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">212</span>     <span style="color:#66d9ef">atomic_t</span> mm_count;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">213</span>     <span style="color:#66d9ef">int</span> map_count;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">214</span>     <span style="color:#66d9ef">struct</span> rw_semaphore mmap_sem;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">215</span>     <span style="color:#66d9ef">spinlock_t</span> page_table_lock;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">216</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">217</span>     <span style="color:#66d9ef">struct</span> list_head mmlist;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">221</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">222</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> start_code, end_code, start_data, end_data;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">223</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> start_brk, brk, start_stack;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">224</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> arg_start, arg_end, env_start, env_end;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">225</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> rss, total_vm, locked_vm;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">226</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> def_flags;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">227</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> cpu_vm_mask;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">228</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> swap_address;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">229</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">230</span>     <span style="color:#66d9ef">unsigned</span> dumpable:<span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">231</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">232</span>     <span style="color:#75715e">/* Architecture-specific MM context */</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">233</span>     <span style="color:#66d9ef">mm_context_t</span> context;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">234</span> };
+</span></span></code></pre></div><p>크기가 큰 이 구조체의 각 필드의 의미는 아래와 같다:</p>
 <ul>
 <li>mmap: 주소 공간의 모든 VMA region을 잇는 linked list의 head이다.</li>
 <li>mm_rb: VMA는 linked list 뿐만아니라, red-black tree로도 관리된다. 이 필드는 rb-tree의 root이다.</li>
@@ -147,7 +175,24 @@ dumpable: prctl()에 의해 set되며, 프로세스을 tracing할 때만 중요�
 context: 아키텍처 의존적인 MMU context이다.</li>
 </ul>
 <p>mm_struct를 다루는 함수는 개수가 적으며, Table 4.2에 나와있다.</p>
-<table>
+
+
+
+
+
+
+  
+  
+  
+
+
+  
+
+
+
+
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-582461379">
+  <table class="table " id="582461379" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-582461379" itemprop="about">Table 4.2: Functions related to memory region descriptors</caption>
 <thead>
 <tr>
 <th>함수</th>
@@ -181,22 +226,24 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 </tr>
 </tbody>
 </table>
-<!-- raw HTML omitted -->
+
+</div>
+
 <h3 id="431-allocating-a-descriptor">4.3.1 Allocating a Descriptor</h3>
 <p>mm_struct 할당은 두 가지 함수를 통해 할 수 있다. 약간의 혼란이 있을 수 있겠지만, 그 둘은 본질적으로 동일하지만 약간의 중요한 차이가 있다. allocate_mm()은 slab allocator을 통해 mm_struct를 할당하는 preprocessor macro이다 (8장 참조). mm_alloc()은 slab을 통해 할당하고 mm_init()을 통해 이를 초기화한다.</p>
 <h3 id="432-initialising-a-descriptor">4.3.2 Initialising a Descriptor</h3>
 <p>시스템의 초기 mm_struct는 init_mm이라고 하며, 이는 INIT_MM() 매크로를 통해 컴파일 타임에 정적으로 초기화된다.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">238</span> <span style="color:#960050;background-color:#1e0010">#</span>define INIT_MM(name) \
-<span style="color:#ae81ff">239</span> {                                                       \
-<span style="color:#ae81ff">240</span>     mm_rb:          RB_ROOT,                            \
-<span style="color:#ae81ff">241</span>     pgd:            swapper_pg_dir,                     \
-<span style="color:#ae81ff">242</span>     mm_users:       ATOMIC_INIT(<span style="color:#ae81ff">2</span>),                     \
-<span style="color:#ae81ff">243</span>     mm_count:       ATOMIC_INIT(<span style="color:#ae81ff">1</span>),                     \
-<span style="color:#ae81ff">244</span>     mmap_sem:       __RWSEM_INITIALIZER(name.mmap_sem), \
-<span style="color:#ae81ff">245</span>     page_table_lock: SPIN_LOCK_UNLOCKED,                \
-<span style="color:#ae81ff">246</span>     mmlist:         LIST_HEAD_INIT(name.mmlist),        \
-<span style="color:#ae81ff">247</span> }
-</code></pre></div><p>init_mm이 세팅되고 나면, 새로운 mm_struct들은 그들의 부모 mm_struct를 템플릿으로 사용하여 생성된다. copy_mm()이 그 작업을 담당하며, 이는 프로세스 관련 필드를 init_mm을 이용하여 초기화한다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">238</span> <span style="color:#960050;background-color:#1e0010">#</span>define <span style="color:#a6e22e">INIT_MM</span>(name) \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">239</span> {                                                       \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">240</span>     mm_rb:          RB_ROOT,                            \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">241</span>     pgd:            swapper_pg_dir,                     \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">242</span>     mm_users:       <span style="color:#a6e22e">ATOMIC_INIT</span>(<span style="color:#ae81ff">2</span>),                     \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">243</span>     mm_count:       <span style="color:#a6e22e">ATOMIC_INIT</span>(<span style="color:#ae81ff">1</span>),                     \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">244</span>     mmap_sem:       <span style="color:#a6e22e">__RWSEM_INITIALIZER</span>(name.mmap_sem), \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">245</span>     page_table_lock: SPIN_LOCK_UNLOCKED,                \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">246</span>     mmlist:         <span style="color:#a6e22e">LIST_HEAD_INIT</span>(name.mmlist),        \
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">247</span> }
+</span></span></code></pre></div><p>init_mm이 세팅되고 나면, 새로운 mm_struct들은 그들의 부모 mm_struct를 템플릿으로 사용하여 생성된다. copy_mm()이 그 작업을 담당하며, 이는 프로세스 관련 필드를 init_mm을 이용하여 초기화한다.</p>
 <h3 id="433-destroying-a-descriptor">4.3.3 Destroying a Descriptor</h3>
 <p>새로운 유저는 atomic_inc(&amp;mm-&gt;mm_users)를 통해 사용 카운트를 증가시키며, mmput()을 통해 감소시킨다. 만약 mm_users가 0으로 감소하게되면, 유저 공간에 대한 사용자가 더 이상 존재하지 않다는 것을 의미하므로, exit_mmap()을 통해 매핑된 region과 페이지 테이블을 삭제한다. 페이지 테이블과 VMA의 모든 유저는 mm_struct 사용자 하나로 간주되므로, mm_count는 mmdrop()을 통해 감소된다. mm_count가 0으로 감소하게되면, mm_struct가 삭제된다.</p>
 <h2 id="memory-regions">Memory Regions</h2>
@@ -204,32 +251,32 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <p>region은 Figure 4.2에서 볼 수 있듯이, 많은 구조체들과 관련되어 있다. 맨 위에는 vm_area_struct가 있는데, anonymous memory의 경우에는 이 구조체 하나만으로 충분히 표현할 수 있다.</p>
 <p>region이 file로 백업되어있는 경우에는, vm_file 필드를 통해 struct file 구조체를 저장하며, struct file은 struct inode에 대한 포인터를 가지고 있다. inode는 struct address_space를 참조하기 위해 사용되며, address_space는 file의 모든 private 정보를 포함한다. 이 정보에는 디스크에서 페이지를 읽어오거나 쓰거나하는 것과 같은 파일시스템 관련 동작을 수행하는 파일시스템 함수들에 대한 포인터가 포함된다.</p>
 <p>struct vm_area_struct는 아래와 같이 &lt;linux/mm.h&gt;에 선언되어있다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"> <span style="color:#ae81ff">44</span> <span style="color:#66d9ef">struct</span> vm_area_struct {
- <span style="color:#ae81ff">45</span>     <span style="color:#66d9ef">struct</span> mm_struct <span style="color:#f92672">*</span> vm_mm;
- <span style="color:#ae81ff">46</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_start;
- <span style="color:#ae81ff">47</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_end;
- <span style="color:#ae81ff">49</span> 
- <span style="color:#ae81ff">50</span>     <span style="color:#75715e">/* linked list of VM areas per task, sorted by address */</span>
- <span style="color:#ae81ff">51</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span>vm_next;
- <span style="color:#ae81ff">52</span> 
- <span style="color:#ae81ff">53</span>     pgprot_t vm_page_prot;
- <span style="color:#ae81ff">54</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_flags;
- <span style="color:#ae81ff">55</span> 
- <span style="color:#ae81ff">56</span>     rb_node_t vm_rb;
- <span style="color:#ae81ff">57</span> 
- <span style="color:#ae81ff">63</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span>vm_next_share;
- <span style="color:#ae81ff">64</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">**</span>vm_pprev_share;
- <span style="color:#ae81ff">65</span> 
- <span style="color:#ae81ff">66</span>     <span style="color:#75715e">/* Function pointers to deal with this struct. */</span>
- <span style="color:#ae81ff">67</span>     <span style="color:#66d9ef">struct</span> vm_operations_struct <span style="color:#f92672">*</span> vm_ops;
- <span style="color:#ae81ff">68</span> 
- <span style="color:#ae81ff">69</span>     <span style="color:#75715e">/* Information about our backing store: */</span>
- <span style="color:#ae81ff">70</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_pgoff;
- <span style="color:#ae81ff">72</span>     <span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span> vm_file;
- <span style="color:#ae81ff">73</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_raend;
- <span style="color:#ae81ff">74</span>     <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span> vm_private_data;
- <span style="color:#ae81ff">75</span> };
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">44</span> <span style="color:#66d9ef">struct</span> vm_area_struct {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">45</span>     <span style="color:#66d9ef">struct</span> mm_struct <span style="color:#f92672">*</span> vm_mm;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">46</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_start;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">47</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_end;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">49</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">50</span>     <span style="color:#75715e">/* linked list of VM areas per task, sorted by address */</span>
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">51</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span>vm_next;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">52</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">53</span>     <span style="color:#66d9ef">pgprot_t</span> vm_page_prot;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">54</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_flags;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">55</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">56</span>     <span style="color:#66d9ef">rb_node_t</span> vm_rb;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">57</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">63</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span>vm_next_share;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span>     <span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">**</span>vm_pprev_share;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span>     <span style="color:#75715e">/* Function pointers to deal with this struct. */</span>
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">67</span>     <span style="color:#66d9ef">struct</span> vm_operations_struct <span style="color:#f92672">*</span> vm_ops;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">68</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">69</span>     <span style="color:#75715e">/* Information about our backing store: */</span>
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">70</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_pgoff;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">72</span>     <span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span> vm_file;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">73</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> vm_raend;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">74</span>     <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span> vm_private_data;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">75</span> };
+</span></span></code></pre></div><ul>
 <li>vm_mm: VMA가 속한 mm_struct이다.</li>
 <li>vm_start: region의 시작 주소이다.</li>
 <li>vm_end: region의 끝 주소이다.</li>
@@ -288,34 +335,34 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <p>모든 region들은 vm_next 필드에 linked list로 주소를 기준으로 정렬되어 연결되어있다. free 영역을 찾을 때에는 단순히 리스트를 순회하여 찾으면 되지만, page fault처럼 특정 주소에 해당하는 VMA를 찾을 때는 이렇게 하면 안된다. 이 경우에는, red-black 트리를 순회하며 이는 O(logN)의 시간복잡도를 가진다. rb tree도 주소를 기준으로 정렬되어있고, 따라서 현재 노드보다 작은 주소는 왼쪽 leaf에, 큰 주소는 오른쪽 leaf에 존재한다.</p>
 <h3 id="441-memory-region-operations">4.4.1 Memory Region Operations</h3>
 <p>VMA가 지원하는 operation으로는 open(), close(), 그리고 nopage()가 있다. vma-&gt;vm_ops 필드에는 struct vm_operations_struct 자료형으로 해당 operation들이 저장된다. 해당 구조체에는 3개의 함수 포인터가 포함되며, &lt;linux/mm.h&gt;에 다음과 같이 선언되어있다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">133</span> <span style="color:#66d9ef">struct</span> vm_operations_struct {
-<span style="color:#ae81ff">134</span>     <span style="color:#66d9ef">void</span> (<span style="color:#f92672">*</span>open)(<span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> area);
-<span style="color:#ae81ff">135</span>     <span style="color:#a6e22e">void</span> (<span style="color:#f92672">*</span>close)(<span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> area);
-<span style="color:#ae81ff">136</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span> (<span style="color:#f92672">*</span>nopage)(<span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> area, 
-                                <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> address, 
-                                <span style="color:#66d9ef">int</span> unused);
-<span style="color:#ae81ff">137</span> };
-</code></pre></div><p>open()과 close()는 region이 생성되고 삭제될 때마다 호출될 것이다. 이 함수들은 region이 open되고 close될 때마다 추가적인 작업을 수행해야하는 일부 디바이스, 한 파일시스템, 그리고 System V shared regions에 의해서만 사용된다. 예를 들어, System V open() 콜백은 shared segment를 사용하는 VMA의 수를 증가시킬 것이다 (shp-&gt;shm_nattch).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">133</span> <span style="color:#66d9ef">struct</span> vm_operations_struct {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">134</span>     <span style="color:#66d9ef">void</span> (<span style="color:#f92672">*</span>open)(<span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> area);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">135</span>     <span style="color:#a6e22e">void</span> (<span style="color:#f92672">*</span>close)(<span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> area);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">136</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span> (<span style="color:#f92672">*</span>nopage)(<span style="color:#66d9ef">struct</span> vm_area_struct <span style="color:#f92672">*</span> area, 
+</span></span><span style="display:flex;"><span>                                <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> address, 
+</span></span><span style="display:flex;"><span>                                <span style="color:#66d9ef">int</span> unused);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">137</span> };
+</span></span></code></pre></div><p>open()과 close()는 region이 생성되고 삭제될 때마다 호출될 것이다. 이 함수들은 region이 open되고 close될 때마다 추가적인 작업을 수행해야하는 일부 디바이스, 한 파일시스템, 그리고 System V shared regions에 의해서만 사용된다. 예를 들어, System V open() 콜백은 shared segment를 사용하는 VMA의 수를 증가시킬 것이다 (shp-&gt;shm_nattch).</p>
 <p>중요한 것은 nopage() 콜백 함수이다. 이 콜백 함수는 page fault시에 do_no_page() 함수에서 사용된다. nopage()는 페이지를 page cache에 위치시키거나, 페이지를 할당하고 요청된 데이터를 채워서 반환한다.</p>
 <p>대부분의 매핑된 파일들은 generic_file_vm_ops라고 불리는 vm_operations_struct를 사용한다. 이것은 오직 filemap_nopage() 함수만 등록한다. 이 nopage() 함수는 페이지를 page cache에 위치시키거나 디스크로부터 정보를 읽어올 것이다. 해당 구조체는 mm/filemap.c에 아래와 같이 선언되어있다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">2243</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> vm_operations_struct generic_file_vm_ops <span style="color:#f92672">=</span> {
-<span style="color:#ae81ff">2244</span>     nopage:         filemap_nopage,
-<span style="color:#ae81ff">2245</span> };
-</code></pre></div><h3 id="442-filedevice-backed-memory-regions">4.4.2 File/Device backed memory regions</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">2243</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> vm_operations_struct generic_file_vm_ops <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2244</span>     nopage:         filemap_nopage,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2245</span> };
+</span></span></code></pre></div><h3 id="442-filedevice-backed-memory-regions">4.4.2 File/Device backed memory regions</h3>
 <p>Region이 파일로 백업되어 있는 경우, vm_file은 Figure 4.2에서 볼 수 있듯이 관련된 address_space와 연결되어있다. 해당 구조체는 디스크에 flush되어야하는 dirty page의 수와 같이, 파일시스템과 관련이 있는 정보들을 포함한다. 이는 &lt;linux/fs.h&gt;에 다음과 같이 선언되어있다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">406</span> <span style="color:#66d9ef">struct</span> address_space {
-<span style="color:#ae81ff">407</span>     <span style="color:#66d9ef">struct</span> list_head        clean_pages;    
-<span style="color:#ae81ff">408</span>     <span style="color:#66d9ef">struct</span> list_head        dirty_pages;    
-<span style="color:#ae81ff">409</span>     <span style="color:#66d9ef">struct</span> list_head        locked_pages;   
-<span style="color:#ae81ff">410</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>           nrpages;        
-<span style="color:#ae81ff">411</span>     <span style="color:#66d9ef">struct</span> address_space_operations <span style="color:#f92672">*</span>a_ops; 
-<span style="color:#ae81ff">412</span>     <span style="color:#66d9ef">struct</span> inode            <span style="color:#f92672">*</span>host;          
-<span style="color:#ae81ff">413</span>     <span style="color:#66d9ef">struct</span> vm_area_struct   <span style="color:#f92672">*</span>i_mmap;        
-<span style="color:#ae81ff">414</span>     <span style="color:#66d9ef">struct</span> vm_area_struct   <span style="color:#f92672">*</span>i_mmap_shared; 
-<span style="color:#ae81ff">415</span>     spinlock_t              i_shared_lock;  
-<span style="color:#ae81ff">416</span>     <span style="color:#66d9ef">int</span>                     gfp_mask;       
-<span style="color:#ae81ff">417</span> };
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">406</span> <span style="color:#66d9ef">struct</span> address_space {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">407</span>     <span style="color:#66d9ef">struct</span> list_head        clean_pages;    
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">408</span>     <span style="color:#66d9ef">struct</span> list_head        dirty_pages;    
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">409</span>     <span style="color:#66d9ef">struct</span> list_head        locked_pages;   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">410</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>           nrpages;        
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">411</span>     <span style="color:#66d9ef">struct</span> address_space_operations <span style="color:#f92672">*</span>a_ops; 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">412</span>     <span style="color:#66d9ef">struct</span> inode            <span style="color:#f92672">*</span>host;          
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">413</span>     <span style="color:#66d9ef">struct</span> vm_area_struct   <span style="color:#f92672">*</span>i_mmap;        
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">414</span>     <span style="color:#66d9ef">struct</span> vm_area_struct   <span style="color:#f92672">*</span>i_mmap_shared; 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">415</span>     <span style="color:#66d9ef">spinlock_t</span>              i_shared_lock;  
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">416</span>     <span style="color:#66d9ef">int</span>                     gfp_mask;       
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">417</span> };
+</span></span></code></pre></div><ul>
 <li>clean_pages: 백업 스토리지와 동기화가 필요없는 clean page들의 리스트이다.</li>
 <li>dirty_pages: 백업 스토리지와 동기화가 필요한 dirty page들의 리스트이다.</li>
 <li>locked_pages: 메모리에 락이 잡혀있는 페이지들의 리스트이다.</li>
@@ -328,32 +375,32 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <li>gfp_mask: __alloc_pages()를 통해 새로운 페이지를 할당할 때 사용할 마스크이다.</li>
 </ul>
 <p>Memory manager는 주기적으로 정보를 디스크에 flush 해야한다. Memory manager는 어떤 정보가 어떻게 디스크에 쓰여지는 지에 관심이 없으므로, a_ops 구조체가 관련된 함수를 호출하는데 사용된다. 이는 &lt;linux/fs.h&gt;에 선언되어있다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">385</span> <span style="color:#66d9ef">struct</span> address_space_operations {
-<span style="color:#ae81ff">386</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>writepage)(<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
-<span style="color:#ae81ff">387</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>readpage)(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
-<span style="color:#ae81ff">388</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>sync_page)(<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
-<span style="color:#ae81ff">389</span>     <span style="color:#75715e">/*
-</span><span style="color:#75715e">390      * ext3 requires that a successful prepare_write() call be
-</span><span style="color:#75715e">391      * followed by a commit_write() call - they must be balanced
-</span><span style="color:#75715e">392      */</span>
-<span style="color:#ae81ff">393</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>prepare_write)(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, 
-                             <span style="color:#66d9ef">unsigned</span>, <span style="color:#66d9ef">unsigned</span>);
-<span style="color:#ae81ff">394</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>commit_write)(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, 
-                             <span style="color:#66d9ef">unsigned</span>, <span style="color:#66d9ef">unsigned</span>);
-<span style="color:#ae81ff">395</span>     <span style="color:#75715e">/* Unfortunately this kludge is needed for FIBMAP. 
-</span><span style="color:#75715e">         * Don&#39;t use it */</span>
-<span style="color:#ae81ff">396</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>bmap)(<span style="color:#66d9ef">struct</span> address_space <span style="color:#f92672">*</span>, <span style="color:#66d9ef">long</span>);
-<span style="color:#ae81ff">397</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>flushpage) (<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>);
-<span style="color:#ae81ff">398</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>releasepage) (<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, <span style="color:#66d9ef">int</span>);
-<span style="color:#ae81ff">399</span> <span style="color:#960050;background-color:#1e0010">#</span>define KERNEL_HAS_O_DIRECT
-<span style="color:#ae81ff">400</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>direct_IO)(<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">struct</span> inode <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> kiobuf <span style="color:#f92672">*</span>, 
-                         <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>, <span style="color:#66d9ef">int</span>);
-<span style="color:#ae81ff">401</span> <span style="color:#960050;background-color:#1e0010">#</span>define KERNEL_HAS_DIRECT_FILEIO
-<span style="color:#ae81ff">402</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>direct_fileIO)(<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> kiobuf <span style="color:#f92672">*</span>, 
-                             <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>, <span style="color:#66d9ef">int</span>);
-<span style="color:#ae81ff">403</span>     <span style="color:#a6e22e">void</span> (<span style="color:#f92672">*</span>removepage)(<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
-<span style="color:#ae81ff">404</span> };
-</code></pre></div><p>각 필드들은 모두 함수 포인터들이며, 다음과 같은 역할을 한다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">385</span> <span style="color:#66d9ef">struct</span> address_space_operations {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">386</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>writepage)(<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">387</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>readpage)(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">388</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>sync_page)(<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">389</span>     <span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">390      * ext3 requires that a successful prepare_write() call be
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">391      * followed by a commit_write() call - they must be balanced
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">392      */</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">393</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>prepare_write)(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, 
+</span></span><span style="display:flex;"><span>                             <span style="color:#66d9ef">unsigned</span>, <span style="color:#66d9ef">unsigned</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">394</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>commit_write)(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, 
+</span></span><span style="display:flex;"><span>                             <span style="color:#66d9ef">unsigned</span>, <span style="color:#66d9ef">unsigned</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">395</span>     <span style="color:#75715e">/* Unfortunately this kludge is needed for FIBMAP. 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * Don&#39;t use it */</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">396</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>bmap)(<span style="color:#66d9ef">struct</span> address_space <span style="color:#f92672">*</span>, <span style="color:#66d9ef">long</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">397</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>flushpage) (<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">398</span>     <span style="color:#a6e22e">int</span> (<span style="color:#f92672">*</span>releasepage) (<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>, <span style="color:#66d9ef">int</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">399</span> <span style="color:#960050;background-color:#1e0010">#</span>define KERNEL_HAS_O_DIRECT
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">400</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>direct_IO)(<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">struct</span> inode <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> kiobuf <span style="color:#f92672">*</span>, 
+</span></span><span style="display:flex;"><span>                         <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>, <span style="color:#66d9ef">int</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">401</span> <span style="color:#960050;background-color:#1e0010">#</span>define KERNEL_HAS_DIRECT_FILEIO
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">402</span>     <span style="color:#66d9ef">int</span> (<span style="color:#f92672">*</span>direct_fileIO)(<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> kiobuf <span style="color:#f92672">*</span>, 
+</span></span><span style="display:flex;"><span>                             <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>, <span style="color:#66d9ef">int</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">403</span>     <span style="color:#a6e22e">void</span> (<span style="color:#f92672">*</span>removepage)(<span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">404</span> };
+</span></span></code></pre></div><p>각 필드들은 모두 함수 포인터들이며, 다음과 같은 역할을 한다:</p>
 <ul>
 <li>writepage: 페이지를 디스크에 쓴다. 써야하는 부분의 파일 내에서의 오프셋은 페이지 구조체 안에 저장되어있다. 블록을 찾는 것은 파일시스템 코드의 역할이다. buffer.c의 block_write_full_page() 함수를 참조해라.</li>
 <li>readpage: 디스크에서 페이지를 읽는다. buffer.c의 block_read_full_page()를 참조하라.</li>
@@ -370,8 +417,13 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <h3 id="443-creating-a-memory-region">4.4.3 Creating A Memory Region</h3>
 <p>mmap() 시스템콜은 프로세스가 새로운 메모리 region을 생성할 때 사용한다. x86에서 이 함수는 sys_mmap2()를 호출하고, 이는 다시 do_mmap2()를 같은 인자로 호출한다. do_mmap2()는 do_mmap_pgoff()가 필요로 하는 인자들을 획득하는 역할을 하며, do_mmap_pgoff()는 모든 아키텍처에 대해서 새로운 영역을 생성하기 위한 중요한 역할을 한다.</p>
 <p>do_mmap2()는 먼저 MAP_DENYWRITE와 MAP_EXECUTABLE 비트를 인자로 받은 flag에서 clear한다. 이는 mmap() 메뉴얼 페이지에서 확인할 수 있듯이, 리눅스가 해당 비트들을 무시하기 때문이다. 만약 파일이 매핑되는 것이라면, do_mmap2()는 인자로 받은 파일 디스크립터를 통해 struct file을 찾고, mm_struct-&gt;mmap_sem 락을 잡은 후 do_mmap_pgoff()를 호출할 것이다.
-<img src="https://velog.velcdn.com/images/minlno/post/cb43d7f3-8d62-4f8f-9811-9f7af4f08b39/image.png" alt="Figure 4.4"></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/cb43d7f3-8d62-4f8f-9811-9f7af4f08b39/image.png" alt="Figure 4.4">
+    <figcaption>Figure 4.4: Call Graph: sys_mmap2()</figcaption>
+  </figure>
+
+</p>
 <p>do_mmap_pgoff()는 먼저 기본적인 sanity 검사를 수행한다. 파일이나 장치가 매핑되는 것이라면, 이는 먼저 적절한 파일시스템 또는 장치 함수가 이용가능한 지를 체크한다. 그런 다음, 이는 매핑의 크기가 페이지 크기로 정렬되어있는 지 확인하고, 만약 매핑이 커널 주소 공간에 대한 것이라면 매핑을 중단한다. 다음으로 매핑의 크기가 pgoff의 범위를 넘어가지 않음을 보장하며, 마지막으로 프로세스가 이미 너무 많은 region을 매핑하지 않았음을 보장한다.</p>
 <p>함수의 나머지는 매우 많은 일을 하지만 넓게 말하면 다음과 같은 스텝으로 구성된다고 할 수 있다:</p>
 <ul>
@@ -434,14 +486,24 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <h3 id="445-finding-a-free-memory-region">4.4.5 Finding a Free Memory Region</h3>
 <p>새로운 영역이 메모리에 매핑되면, 해당 매핑을 커버할 수 있을만큼 충분히 큰 free region을 찾아야한다. free region을 찾는 일을 담당하는 함수가 바로 get_unmapped_area()이다.</p>
 <p>Figure 4.5에서 볼 수 있듯이, 매핑되지 않은 영역을 찾는 것은 그렇게 많은 일을 요구하지 않는다. 함수는 많은 인자를 받는다. 매핑할 file이나 device를 나타내는 struct file, 파일 내에서 매핑할 영역의 오프셋인 pgoff가 인자로 전달된다. 또한 매핑의 주소인 address와 매핑의 length가 인자로 전달된다. 마지막으로는 영역의 보호 flags가 인자로 전달된다.</p>
-<p><img src="https://velog.velcdn.com/images/minlno/post/1853548b-4ab9-4e8e-ab93-320775d9ce1c/image.png" alt="Figure 4.5"></p>
-<!-- raw HTML omitted -->
+<p>
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/1853548b-4ab9-4e8e-ab93-320775d9ce1c/image.png" alt="Figure 4.5">
+    <figcaption>Figure 4.5: Call Graph: get_unmapped_area()</figcaption>
+  </figure>
+
+</p>
 <p>만약 비디오 카드와 같은 장치가 매핑된다면, 연관된 f_op-&gt;get_unmapped_area() 함수가 사용된다. 그 이유는 장치 또는 파일들은 일반적인 코드가 알 수 없는, 예를 들면 주소가 특정 가상 주소로 align되어야 한다던지,와 같은 추가적인 요구사항을 가질 수도 있기 때문이다.</p>
 <p>만약 특별한 요구사항이 없다면, 아키텍처 의존적인 함수인 arch_get_unmapped_area()가 호출된다. 모든 아키텍처가 자신만의 함수를 제공하는 것은 아니다. 제공하지 않는 아키텍처를 위해서, mm/mmap.c에 generic version이 제공된다.</p>
 <h3 id="446-inserting-a-memory-region">4.4.6 Inserting a memory region</h3>
 <p>새로운 메모리 region을 삽입하기 위한 주요 함수는 insert_vm_struct()이며, call graph는 Figure 4.6에서 확인할 수 있다. 이는 굉장히 단순한 함수로, 먼저 find_vma_prepare()을 호출하여 사이에 삽입하기위한 두 VMA와 red-black tree에 삽입하기 위해 필요한 노드를 찾는다. 그 다음에는 __vma_link()를 호출하여 새로운 VMA를 연결하기 위한 작업을 수행한다.
-<img src="https://velog.velcdn.com/images/minlno/post/40cdf49c-bf26-4fce-9adc-04b304842fb7/image.png" alt="Figure 4.6"></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/40cdf49c-bf26-4fce-9adc-04b304842fb7/image.png" alt="Figure 4.6">
+    <figcaption>Figure 4.6: Call Graph: insert_vm_struct()</figcaption>
+  </figure>
+
+</p>
 <p>insert_vm_struct()는 map_count 필드를 증가시키지 않기때문에 거의 사용하지 않는다. 그 대신, map_count를 증가시키면서 동일한 작업을 수행하는 __insert_vm_struct()를 보통 사용한다.</p>
 <p>vma_link()와 __vma_link()가 link를 위해 제공된다. vma_link()는 lock을 잡지 않고 호출하도록 요구된다. 이는 먼저 필요한 모든 락(VMA가 file mapping이라면 file에 대한 락도 포함)을 잡고 __vma_link()를 호출하여 연관된 리스트들에 VMA를 위치시킨다.</p>
 <p>중요한 사실은 많은 함수들이 insert_vm_struct() 대신에 find_vma_prepare()를 호출한 후 vma_link()를 통해 VMA를 연결하는 것을 선호한다는 것이다. 그 이유는 insert_vm_struct()를 사용하면 불필요하게 tree를 여러번 순회하게되기 때문이다.</p>
@@ -452,18 +514,38 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <p>병합을 수행하기위해 명시적으로 사용되는 함수는 존재하지 않지만, region들은 다른 곳에서 병합되기도 한다. 첫 번째는 sys_mprotect() 도중 권한이 변경된 영역이 인접한 영역과 동일하게 되면 병합하는 경우이다. 두 번째는 move_vma() 도중 비슷한 영역이 인접하게 위치하게 되면 병합하는 경우이다.</p>
 <h3 id="448-remapping-and-moving-a-memory-region">4.4.8 Remapping and moving a memory region</h3>
 <p>mremap()은 기존의 메모리 매핑을 늘리거나 줄이기 위해 제공되는 시스템 콜이다. 이는 sys_mremap() 함수로 구현되며, 만약 region이 늘어나거나 다른 region과 중첩되게되고 MREMAP_FIXED 플래그가 설정되어 있지않다면 해당 region을 옮길 수도 있다. Call graph는 Figure 4.7에서 볼 수 있다.
-<img src="https://velog.velcdn.com/images/minlno/post/9d61a309-74a8-45cf-a8d1-468c966f8f30/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/9d61a309-74a8-45cf-a8d1-468c966f8f30/image.png" alt="">
+    <figcaption>Figure 4.7: Call Graph: sys_mremap()</figcaption>
+  </figure>
+
+</p>
 <p>만약 region을 옮겨야한다면, do_mremap()은 먼저 get_unmapped_area()를 호출하여 새로운 크기의 매핑을 포함할 수 있을만틈 큰 region을 찾고, move_vma()를 호출하여 기존의 VMA를 새로운 곳으로 옮긴다. move_vma()의 call graph는 Figure 4.8에서 볼 수 있다.
-<img src="https://velog.velcdn.com/images/minlno/post/5b0bed09-eb4b-4014-97c1-fbed6caee509/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/5b0bed09-eb4b-4014-97c1-fbed6caee509/image.png" alt="">
+    <figcaption>Figure 4.8: Call Graph: move_vma()</figcaption>
+  </figure>
+
+</p>
 <p>move_vma()는 옮겨간 곳 근처의 VMA와 합칠 수 있는 지를 먼저 확인한다. 만약 합칠 수 없다면, 새로운 VMA는 말그대로 한번에 하나의 PTE씩 할당된다. 다음으로는 move_page_tables()를 호출하여 기존 매핑의 페이지 테이블 엔트리를 새로운 곳에 복사한다 (Figure 4.9를 참조하라). 페이지 테이블을 옮기기 위한 더 나은 방식이 존재할 수도 있지만, 지금의 방식은 backtracking이 직관적이라 에러 복구 과정을 쉽게 해준다는 장점이 있다.
-<img src="https://velog.velcdn.com/images/minlno/post/387b170e-19c0-46ec-8559-ba0c0d6d8c0d/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/387b170e-19c0-46ec-8559-ba0c0d6d8c0d/image.png" alt="">
+    <figcaption>Figure 4.9: Call Graph: move_page_tables()</figcaption>
+  </figure>
+
+</p>
 <p>페이지의 내용 자체는 복사되지 않는다. 대신에, zap_page_range()가 호출되어 이전 매핑의 모든 페이지를 swap out하거나 제거하며, 추후에 페이지 폴트 핸들링 코드가 페이지를 스토리지 또는 파일로부터 다시 swap in 하거나, 장치 의존적인 do_nopage() 함수를 호출할 것이다.</p>
 <h3 id="449-locking-a-memory-region">4.4.9 Locking a Memory Region</h3>
-<p><img src="https://velog.velcdn.com/images/minlno/post/0d7f96cd-bffb-47d0-8c9f-7bb47edccceb/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+<p>
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/0d7f96cd-bffb-47d0-8c9f-7bb47edccceb/image.png" alt="">
+    <figcaption>Figure 4.10: Call Graph: sys_mlock()</figcaption>
+  </figure>
+
+</p>
 <p>Linux는 sys_mlock()을 통해 구현된 mlock() 시스템 콜을 통해 특정 주소 범위의 페이지들을 메모리에 락을 걸 수 있다. sys_mlock()의 call graph는 Figure 4.10에서 확인할 수 있다. 크게 보면 이 함수는 단순하다. 락을 걸 주소 범위에 대한 VMA를 생성하고, VM_LOCKED 플래그를 설정하고, 모든 페이지들을 make_pages_present()를 통해 강제로 present 상태로 만든다. sys_mlockall()을 통해 구현되는 시스템 콜인 mlockall() 또한 제공되며, 이는 sys_mlock()이 하는 일을 프로세스의 모든 VMA에 대해서 진행한다. 두 함수 모두 핵심 함수인 do_mlock()에 의존하며, 이는 region을 수정하기 위해 어떤 함수가 필요한 지 결정하는 일과 관련된 VMA들을 찾는 일을 실제로 수행한다.</p>
 <p>어떤 메모리에 lock을 걸기 위해서는 몇가지 제약이 있다. VMA가 page 크기로 align되어있기 때문에, 주소 범위 또한 page 크기로 align되어있어야 한다. 이는 단순히 주소 범위를 가장 가까운 page align된 범위로 반올림하여 해결한다. 두 번째 조건은 시스템 관리자가 설정하는 RLIMIT_MLOCK을 초과하지 않는 것이다. 마지막 조건은 각 프로세스가 물리 메모리의 절반만을 한 번에 잠글 수 있다는 것이다. 이는 기능적으로 다소 비합리적인데, 각각의 자식이 일부를 잠그도록 프로세스가 여러 번 fork 하는 것을 막을 방법이 없기 때문이다. 그러나 페이지를 잠글 수 있는 것은 root 프로세스만이 허용되므로 큰 차이는 없다. root 프로세스는 신뢰할 수 있고, 무엇을 하고 있는 지 알고 있다고 가정하는 것은 안전하다. 만약 그렇지 않다면, 결국 시스템이 망가진 것은 시스템 관리자의 책임으로 봐야하며, 그에 따른 모든 문제도 그가 감수해야 할 것이다.</p>
 <h3 id="4410-unlocking-the-region">4.4.10 Unlocking the region</h3>
@@ -473,8 +555,13 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <p>흥미로운 점은 잠금으로 인해 생성된 VMA가 잠금이 해제되더라도 결합되지 않는다는 것이다. 프로세스가 반복적으로 같은 영역에 잠금을 적용할 것으로 예상되며, 지속적으로 영역을 합치고 분할하는 것은 처리 성능을 소모하는 일이므로 그만한 가치가 없다고 간주된다.</p>
 <h3 id="4412-deleting-a-memory-region">4.4.12 Deleting a memory region</h3>
 <p>메모리 영역을 삭제하는 일은 do_munmap()이 담당한다. 이는 다른 메모리 영역 관련 함수들과 비교하여 상대적으로 간단하며, 기본적으로 세가지 부분으로 나눌 수 있다. 첫 번째는 unmap될 영역을 고려해 red-black tree을 수정하는 것이다. 두 번째는 해당 영역과 관련된 페이지들과 PTE들을 해제하는 것이며, 세 번째는 hole이 생겼다면 region들을 수정하는 것이다.
-<img src="https://velog.velcdn.com/images/minlno/post/09d6e11c-f5f4-4331-b81c-0f8f025d0e44/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/09d6e11c-f5f4-4331-b81c-0f8f025d0e44/image.png" alt="">
+    <figcaption>Figure 4.11: Call Graph: do_munmap()</figcaption>
+  </figure>
+
+</p>
 <p>Red-black tree의 순서를 보장하기 위해, unmap으로 인해 영향을 받는 모든 VMA들을 free라고 불리는 linked list에 넣고, red-black tree로부터 rb_erase()를 이용하여 제거한다. 여전히 존재하는 region들은 그들의 새로운 주소를 이용하여 다시 추가될 것이다.</p>
 <p>다음으로, free linked list를 순회하며 VMA가 부분 unmap이 아닌지 확인한다. 영역이 부분적으로만 unmap 될 예정이라 하더라도, 공유 파일 매핑을 제거하기 위해 remove_shared_vm_struct()가 호출된다. 다시 말해, 이것이 부분 unmap인 경우, 수정 과정에서 재생성될 것이다. zap_page_range()는 unmap 될 예정인 영역과 관련된 모든 페이지를 제거하기 위해 호출되며, 이후 부분 unmap을 처리하기 위해 unmap_fixup()이 호출된다.</p>
 <p>마지막으로, unmap된 영역과 관련된 모든 페이지 테이블 엔트리를 해제하기 위해 free_pgtables()가 호출된다. 페이지 테이블 엔트리의 해제가 완전하지 않다는 점을 유념해야 한다. 이는 전체 PGD 디렉토리와 그 엔트리들만을 unmap 할 것이기 때문이다. 예를 들어, 하나의 PGD가 매핑에 절반만 사용되었다면, 어떠한 페이지 테이블 엔트리도 해제되지 않는다. 이는 더 세밀한 페이지 테이블 엔트리의 해제가 너무 비용이 많이 들며, 작고 다시 사용될 가능성이 높은 데이터 구조를 해제하는 것이 비효율적이기 때문이다.</p>
@@ -489,7 +576,24 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <p>리눅스는 대부분의 OS와 마찬가지로 non-resident page를 처리하기 위한 Demand Fetch 정책을 가지고 있다. 이것은 하드웨어가 페이지 폴트 예외를 발생시킬 때, OS가 그 예외를 포착하고 페이지를 할당할 때만 페이지가 백업 스토리지에서 메모리로 fetch 된다는 것을 의미한다. 이러한 과정은 page prefetching 정책을 통해서 페이지 폴트의 수를 줄일 수 있음을 암시하지만, 리눅스는 이에 대해서는 꽤나 미숙한 편이다. 페이지가 swap space로부터 fetch될 때에는, 해당 페이지 뒤의 2^page_cluster 까지의 추가 페이지를 swapin_readahead()를 통해서 읽어오고, swap cache에 배치한다. 불행히도, 곧 사용될 가능성이 있는 페이지들이 스왑 영역에서 인접해 있을 확률은 낮기 때문에, 이는 좋지 않은 prepaging 정책이다. 리눅스는 프로그램의 동작에 적응하는 prepaging 정책을 통해 이득을 볼 수 있을 것이다.</p>
 <p>페이지 폴트에는 major와 minor 타입이 존재한다. Major 페이지 폴트는 비싼 작업인 disk read를 수행해야하는 페이지 폴트를 말하며, 그렇지 않은 경우를 minor 또는 soft 페이지 폴트라고 말한다. 리눅스는 task_struct-&gt;maj_flt와 task_struct-&gt;min_flt로 해당 타입들의 통계치를 관리한다.</p>
 <p>리눅스의 페이지 폴트 핸들러는 Table 4.4에 나열되어 있는 많은 수의 서로 다른 타입의 페이지 폴트를 인식하고 처리할 수 있어야하며, 이 장에서 곧 다룰 것이다.</p>
-<table>
+
+
+
+
+
+
+  
+  
+  
+
+
+  
+
+
+
+
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-751496328">
+  <table class="table " id="751496328" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-751496328" itemprop="about">Table 4.4: Reasons For Page Faulting</caption>
 <thead>
 <tr>
 <th>Exception</th>
@@ -540,27 +644,49 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 </tr>
 </tbody>
 </table>
-<!-- raw HTML omitted -->
+
+</div>
+
 <p>각 아키텍처는 페이지 폴트를 처리하기위한 아키텍처 의존적인 함수를 등록한다. 이 함수의 이름은 임의로 지어지지만, 보통은 do_page_fault()이며, x86의 call grap를 Figure 4.12에서 볼 수 있다.</p>
-<p><img src="https://velog.velcdn.com/images/minlno/post/82855460-2a86-4f5f-9b69-24df1b1bde8b/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+<p>
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/82855460-2a86-4f5f-9b69-24df1b1bde8b/image.png" alt="">
+    <figcaption>Figure 4.12: Call Graph: do_page_fault()</figcaption>
+  </figure>
+
+</p>
 <p>이 함수에는 폴트가 발생한 주소, 페이지가 단순히 없어서 폴트가 발생한 것인지 아니면 protection error인지, 읽기 또는 쓰기로 인한 폴트인지, 유저 또는 커널 공간에서의 폴트인지와 같은 풍부한 정보가 제공된다. 이 함수는 이 정보를 토대로 어떤 타입의 폴트가 발생한 것인지를 판단하고, 이 폴트가 아키텍처 독립적인 코드에 의해 어떻게 처리되어야할 지를 결정한다. Figure 4.13의 flow chart는 이 함수가 일반적으로 하는 일을 보여준다. 이 Figure에서 콜론이 붙어있는 식별자는 실제 코드에서의 label과 동일하다.</p>
-<p><img src="https://velog.velcdn.com/images/minlno/post/61c27fe1-2884-492f-9d6a-3c8a70b28a52/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+<p>
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/61c27fe1-2884-492f-9d6a-3c8a70b28a52/image.png" alt="">
+    <figcaption>Figure 4.13: do_page_fault() Flow Diagram</figcaption>
+  </figure>
+
+</p>
 <p>handle_mm_fault()은 아키텍저 독립적인 가장 윗 단계의 함수이며, 스토리지에 있는 페이지에 대한 폴트 처리, COW 수행 등등의 작업을 처리한다. 이 함수가 1을 반환하면 그것이 minor fault였음을 의미하며, 2라면 major임을 의미하고, 0은 SIGBUS error, 나머지 다른 값들은 out of memory handler를 깨워 전달되게 된다.</p>
 <h3 id="461-handling-a-page-fault">4.6.1 Handling a Page Fault</h3>
 <p>예외 처리자가 어떠한 폴트가 valid memory region에서의 valid page에 대한 폴트임을 알았다면, 해당 폴트는 아키텍처 독립적인 함수인 handle_mm_fault()가 이어서 처리하게된다 (Call graph는 Figure 4.14에서 확인할 수 있다). 이 함수는 만약 필요한 페이지 테이블 엔트리가 없다면 이를 할당하고 handle_pte_fault()를 호출한다.</p>
 <p>PTE의 속성에 따라, Figure 4.14에서 볼 수 있는 핸들러 함수 중 하나가 사용된다. 이 함수는 먼저 pte_present()와 pte_none()을 통해 PTE가 present한지, PTE가 할당된 적이 있는 지를 체크한다. 만약 어떠한 PTE도 할당된 적 없었다면 (pte_none()이 true를 반환한다면), do_no_page()가 호출되어 Demand Allocation을 수행한다. 그렇지 않다면 해당 페이지는 disk로 스왑 아웃된 것이므로, do_swap_page()가 호출되어 Demand Paging을 수행한다. 흔치 않은 경우로 virtual file에 속한 페이지가 스왑 아웃된 경우에는 do_no_page()가 이를 처리한다. 이에 대해서는 섹션 12.4에서 다룬다.
-<img src="https://velog.velcdn.com/images/minlno/post/da697a30-6573-4b2a-8c7e-9752ffb5eee8/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/da697a30-6573-4b2a-8c7e-9752ffb5eee8/image.png" alt="">
+    <figcaption>Figure 4.14: Call Graph: handle_mm_fault()</figcaption>
+  </figure>
+
+</p>
 <p>두 번째 옵션은 페이지가 쓰여질 것인지다. 만약 PTE가 write protection이 걸려있다면, page는 Copy-On-Write (COW) page이기 때문에 do_wp_page()가 호출된다. COW page는 쓰기가 발생하기 전까지 여러 프로세스들(보통 parent와 child)에 의해 공유되다가, 쓰기를 수행하는 프로세스에 의해 복사본이 생성된다. COW page는 VMA가 writable 하지만 PTE가 writable 하지 않다는 것을 이용하여 구별할 수 있다. 만약 페이지가 COW page가 아닌 경우, 페이지는 단순히 dirty 하다고 표시된다.</p>
 <p>마지막 옵션은 read이고 page가 present 한데도 fault가 발생한 경우이다. 이는 3-level page table을 사용하지 않는 일부 아키텍처에서 발생할 수 있다. 이 경우에는 단순히 PTE를 설정하고 young으로 표시한다.</p>
 <h3 id="462-demand-allocation">4.6.2 Demand Allocation</h3>
 <p>프로세스가 어떤 페이지를 처음 접근하는 경우, 해당 페이지는 do_no_page() 함수에 의해 할당되고 데이터로 채워져야한다. 만약 페이지가 속한 VMA와 관련된 vm_operations_struct (vma-&gt;vm_ops)가 nopage() 함수를 제공한다면, 해당 함수가 호출된다. 이는 접근 시점에 페이지를 할당하고 데이터를 제공해야하는 메모리 매핑된 장치와 데이터를 스토리지로부터 가지고 와야하는 파일 페이지에 중요하다. 우리는 가장 간단한 케이스인 anonymous page에 대한 내용을 먼저 다룰 것이다.</p>
 <h4 id="handling-anonymous-pages">Handling anonymous pages</h4>
 <p>만약 vma-&gt;vm_ops 필드가 비어있거나 nopage() 함수가 제공되지않는 경우, do_anonymous_page()가 호출되어 anonymous 접근을 처리한다. 처리해야하는 케이스에는 두 가지가 있는데, 처음 읽는 경우와 처음 쓰는 경우이다. Anonymous page의 경우, 처음 읽을 때에는 아직 데이터가 없으므로 처리가 가장 쉽다. 이 경우에는 시스템이 제공하는 0으로 채워진 페이지인 empty_zero_page가 PTE에 매핑되고, write protection을 설정한다. Write protection이 설정되기 때문에, 프로세스가 해당 페이지에 쓰기를 수행하면 추가적인 페이지 폴트가 발생한다. x86의 경우, 전역 zero page가 mem_init()에서 초기화된다.
-<img src="https://velog.velcdn.com/images/minlno/post/99e58f02-5aec-46e9-8df2-f4c50b650168/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/99e58f02-5aec-46e9-8df2-f4c50b650168/image.png" alt="">
+    <figcaption>Figure 4.15: Call Graph: do_no_page()</figcaption>
+  </figure>
+
+</p>
 <p>첫 번째로 페이지를 쓰는 경우에는 alloc_page() 함수를 호출하여 새로운 페이지를 할당하며 (6장 참조), clear_user_highpage()를 통해 0으로 초기화한다. 페이지가 성공적으로 할당되었다면, mm_struct의 Resident Set Size (RSS) 필드를 증가시킨다. 일부 아키텍처의 경우 캐시 일관성을 보장하기 위해 페이지가 유저 공간의 프로세스에 삽입되는 경우 필요에 따라 flush_page_to_ram()을 호출한다. 그런 다음 페이지는 LRU list에 삽입되어 추후에 페이지 회수 코드에 의해 회수될 수 있도록 한다. 마지막으로 새로운 매핑을 프로세스의 페이지 테이블에 추가한다.</p>
 <h4 id="handling-filedevice-backed-pages">Handling file/device backed pages</h4>
 <p>만약 file이나 device로 매핑되어있다면, nopage() 함수가 vm_operations_struct에 제공될 것이다. file에 매핑된 경우, filemap_nopage()가 자주 사용되며, 페이지를 할당하고 페이지 크기의 데이터를 디스크로부터 읽어오는 기능을 한다. 페이지가 shmfs의 경우처럼 virtual file에 매핑된 경우, shmem_nopage() 함수를 사용할 것이다 (12장 참조). 각 디바이스 드라이버는 서로 다른 nopage() 함수를 제공하며, 그것이 유효한 struct page를 반환해주기만 한다면, 내부 동작에 대해서는 우리에게 지금은 중요치않다.</p>
@@ -568,15 +694,25 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 <p>두 경우 보두, pte_none()을 호출하여 사용할 PTE가 이미 페이지 테이블에 있는 지를 검사한다. 페이지 폴트를 수행하는 전체 기간동안 PTE spinlock을 잡는 것이 아니기 때문에 SMP 머신에서 같은 페이지에 대한 폴트가 거의 동시에 발생하는 것이 가능하므로, 이 확인을 마지막에 꼭 해야한다. 경쟁 상태가 발생하지 않았다면, PTE를 할당하고 통계치를 갱신하며 캐시 일관성을 위한 아키텍처 hook을 호출한다.</p>
 <h3 id="463-demand-paging">4.6.3 Demand Paging</h3>
 <p>페이지가 백업 스토리지로 스왑 아웃된 상태라면, 섹션 12에서 다루게될 virtual file인 경우를 제외하면, do_swap_page() 함수가 호출되어 페이지를 다시 읽어온다. 페이지를 스토리지에서 찾기 위해 필요한 정보는 PTE 자체에 저장되어 있다. PTE에 있는 정보는 swap 영역에서 페이지를 찾기에 충분하다. 페이지들은 다수의 프로세스들에 의해 공유될 수 있기 때문에, 그들은 항상 즉시 스왑 아웃될 수 있는 것은 아니다. 대신에, 페이지가 스왑아웃 될 때에, 그들은 swap cache에 위치하게 된다.</p>
-<p><img src="https://velog.velcdn.com/images/minlno/post/09ae117b-fac6-4394-9788-6ed894cbac04/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+<p>
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/09ae117b-fac6-4394-9788-6ed894cbac04/image.png" alt="">
+    <figcaption>Figure 4.16: Call Graph: do_swap_page()</figcaption>
+  </figure>
+
+</p>
 <p>struct page를 이를 공유하는 각 프로세스의 PTE에 대해 매핑하는 방법이 없기 때문에, 공유되는 페이지를 즉시 스왑 아웃할 수는 없다. 모든 프로세스들의 페이지 테이블을 탐색하는 방법은 너무 오버헤드가 크다. 2.5.x 커널 후반 버전과 2.4.x의 커스텀 패치 버전은 Reverse Mapping (Rmap)이라는 기술을 포함한다는 것을 알고있으면 좋으며, 이는 이 장의 마지막 부분에서 다룰 것이다.</p>
 <p>swap cache가 존재하기 때문에, fault가 발생했을 때 해당 페이지가 swap cache에 여전히 존재할 가능성이 있다. 만약 그렇다면, 단순히 page에 대한 참조 카운트를 증가시키고 페이지 테이블에 다시 매핑이 등록되며 migor page fault로서 통계에 등록된다.</p>
 <p>만약 페이지가 디스크에만 존재한다면, swapin_readahead()가 호출되어 요청된 페이지과 그 뒤에 인접한 많은 페이지들을 디스크로부터 읽어온다. 읽어오는 페이지들의 수는 mm/swap.c에 정의된 page_cluster 변수에 의해 결정된다. 16MiB보다 작은 RAM을 가진 low memory 머신에서는, 이 변수가 2 또는 3으로 초기화된다. 읽어오는 페이지 수는 비어있거나 나쁜 swap entry가 포함되지 않는 이상 2^page_cluster 개로 결정된다. 이는 seek 작업이 시간적으로 가장 비싸다는 전제하에 동작하며, seek가 끝나게 되면, 이때 탐색된 페이지들은 같이 메모리에 로드되어야 한다.</p>
 <h3 id="464-copy-on-write-cow-pages">4.6.4 Copy On Write (COW) Pages</h3>
 <p>예전에는 fork 할 때, 부모 주소 공간 전체를 child를 위해 복제했었다. 프로세스의 대부분을 백업 스토리지로부터 swap in 해야하는 상황이 발생할 수 있기 때문에, 이는 극도로 비싼 작업이었다. 상당한 오버헤드를 피하기 위해, Copy-On-Write라는 기술이 도입되었다.
-<img src="https://velog.velcdn.com/images/minlno/post/16f9a6c9-94c1-4402-a6a8-1d2660a8beed/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/16f9a6c9-94c1-4402-a6a8-1d2660a8beed/image.png" alt="">
+    <figcaption>Figure 4.17: Call Graph: do_wp_page()</figcaption>
+  </figure>
+
+</p>
 <p>Fork를 하는 동안, 두 프로세스의 PTE들을 read-only로 설정하여 write가 발생하면 page fault가 발생하도록 한다. Linux는 COW page를 인지할 수 있는데, 이는 PTE가 write protect되더라도, 해당하는 VMA는 여전히 writable로 표시되기 때문이다. COW은 do_wp_page()를 통해 수행되며, 이는 페이지의 복사본을 만들고 쓰기를 수행한 프로세스에 매핑한다. 필요한 경우, 새로운 swap slot이 페이지에게 예약될 것이다. 이 방법을 통해, fork 과정에서는 오로지 페이지 테이블 엔트리만이 복사된다.</p>
 <h2 id="47-copying-tofrom-userspace">4.7 Copying To/From Userspace</h2>
 <p>어떤 주소의 페이지가 메모리에 로드되어 있는 지를 빠르게 알 수 있는 방법이 없기 때문에, 프로세스 주소 공간에 직접 접근하는 것은 안전하지 않다. Linux는 주소가 invalid할 때 예외를 일으키는 데 MMU에 의존하며, 페이지 폴트 예외 핸들러가 해당 예외를 캐치하고 이를 처리한다. x86의 경우, __copy_user()가 제공하는 어셈블러를 통해 주소가 완전히 쓸모없는 경우에 해당하는 예외를 처리한다. 예외 처리 코드의 위치는 search_exception_table() 함수를 통해 찾게 된다. Linux는 유저 주소 공간에 또는 유저 공간으로부터 데이터를 안전하게 복사하기위한 API를 많이 제공하며, Table 4.5에서 이를 확인할 수 있다.</p>

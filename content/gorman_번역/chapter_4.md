@@ -22,8 +22,7 @@ categories: ["Gorman's book Translation"]
 
 유저 관점에서 주소공간은 그저 평평한 선형 주소 공간일 뿐이다. 그러나 예측할 수 있듯이, 커널의 관점은 많이 다르다. 주소 공간은 컨텍스트 스위치가 발생할 때마다 바뀔 수 있는 유저 영역과, 항상 동일한 커널 영역으로 나뉜다. 나뉘는 지점은 PAGE_OFFSET 값으로 결정되며, x86에서 이 값은 0xC0000000이다. 이것은 3GiB는 프로세스가 이용가능하고, 나머지 1GiB는 항상 커널에 의해 매핑된다는 것을 의미한다. 커널 관점에서의 linear address space는 Figure 4.1에 나와있다.
 
-![Figure 4.1](https://velog.velcdn.com/images/minlno/post/0a5835e3-4c91-4392-94a5-8fd722cd181b/image.png)
-<figcaption> Figure 4.1: Kernel Address Space </figcaption>
+![Figure 4.1](https://velog.velcdn.com/images/minlno/post/0a5835e3-4c91-4392-94a5-8fd722cd181b/image.png "Figure 4.1: Kernel Address Space")
 
 PAGE_OFFSET의 시작 부분에는 실행할 커널 이미지를 로드하기위해 8MiB의 메모리가 예약된다. 8MiB는 단지 커널 이미지 로드를 위해 적절한 양으로 결정된 크기다. 3.6.1절에서 설명했듯이, 커널 이미지는 커널 페이지 테이블의 초기화 과정에서 해당 공간에 로드된다. 2절에서 말했듯이 커널 이미지 거의 바로 뒤에는, UMA 아키텍처의 경우, mem_map 배열이 저장된다. 해당 배열은 보통 ZONE_DMA을 사용하지 않기 위해 16MiB 위치에 저장된다. NUMA 아키텍처의 경우, 가상 mem_map의 일부분들이 이 영역에 흩뿌려져 있으며, 정확한 위치는 아키텍처마다 다르다.
 
@@ -43,9 +42,9 @@ vmalloc(), kmap() 그리고 고정 가상 주소 매핑에 요구되는 영역�
 
 주소 공간과 관련된 구조체들 사이의 관계를 Figure 4.2에서 볼 수 있다. 주소 공관과 region들에 영향을 주는 시스템 콜들이 존재하며, 이는 Table 4.1에 나와있다.
 
-![Figure 4.2](https://velog.velcdn.com/images/minlno/post/a3ed28ff-312d-4e74-9090-6dc0acb551c2/image.png)
-<figcaption> Figure 4.2: Data Structures related to the Address Space </figcaption>
+![Figure 4.2](https://velog.velcdn.com/images/minlno/post/a3ed28ff-312d-4e74-9090-6dc0acb551c2/image.png "Figure 4.2: Data Structures related to the Address Space")
 
+{{< table title="Table 4.1: System Calls Related to Memory Regions" >}}
 시스템 콜 | 설명
 --- | ---
 fork() | 새로운 프로세스와 주소공간은 생성한다. 모든 페이지들은 COW로 표시되며 페이지 폴트가 발생하여 자신만의 복사본을 만들기 전까지는 두 프로세스에 의해 공유된다.
@@ -56,7 +55,7 @@ munmap() | region의 일부 또는 전체를 해제한다. 만약 region의 중�
 shmat() | shared memory segment를 프로세스 주소 공간에 붙인다.
 execve() | 현재 주소 공간을 대체할 새로운 실행가능한 파일을 불러온다.
 exit() | 주소 공간과 모든 region들을 삭제한다.
-<figcaption> Table 4.1: System Calls Related to Memory Regions </figcaption>
+{{< /table >}}
 
 ## 4.3 Process Address Space Descriptor
 
@@ -129,6 +128,7 @@ context: 아키텍처 의존적인 MMU context이다.
 
 mm_struct를 다루는 함수는 개수가 적으며, Table 4.2에 나와있다.
 
+{{< table title="Table 4.2: Functions related to memory region descriptors" >}}
 함수 | 설명
 --- | ---
 mm_init() | mm_struct의 각 필드를 초기값으로 세팅하고, PGD를 할당하고, 스핀락을 초기화하는 등의 mm_struct 초기화 작업을 수행한다.
@@ -137,7 +137,7 @@ mm_alloc() | allocate_mm()을 통해 mm_struct를 할당하고, mm_init()을 통
 exit_mmap() | mm_struct을 순회하며, 속해있는 모든 VMA를 unmap한다.
 copy_mm() | 새로운 태스크를 위해 현재 태스크의 mm_struct를 복사한다. 이것은 오직 fork 과정에서만 호출된다.
 free_mm() | slab allocator에게 mm_struct를 반환한다.
-<figcaption> Table 4.2: Functions related to memory region descriptors </figcaption> 
+{{< /table >}}
 
 ### 4.3.1 Allocating a Descriptor
 
@@ -340,8 +340,7 @@ Memory manager는 주기적으로 정보를 디스크에 flush 해야한다. Mem
 mmap() 시스템콜은 프로세스가 새로운 메모리 region을 생성할 때 사용한다. x86에서 이 함수는 sys_mmap2()를 호출하고, 이는 다시 do_mmap2()를 같은 인자로 호출한다. do_mmap2()는 do_mmap_pgoff()가 필요로 하는 인자들을 획득하는 역할을 하며, do_mmap_pgoff()는 모든 아키텍처에 대해서 새로운 영역을 생성하기 위한 중요한 역할을 한다.
 
 do_mmap2()는 먼저 MAP_DENYWRITE와 MAP_EXECUTABLE 비트를 인자로 받은 flag에서 clear한다. 이는 mmap() 메뉴얼 페이지에서 확인할 수 있듯이, 리눅스가 해당 비트들을 무시하기 때문이다. 만약 파일이 매핑되는 것이라면, do_mmap2()는 인자로 받은 파일 디스크립터를 통해 struct file을 찾고, mm_struct->mmap_sem 락을 잡은 후 do_mmap_pgoff()를 호출할 것이다.
-![Figure 4.4](https://velog.velcdn.com/images/minlno/post/cb43d7f3-8d62-4f8f-9811-9f7af4f08b39/image.png)
-<figcaption> Figure 4.4: Call Graph: sys_mmap2() </figcaption>
+![Figure 4.4](https://velog.velcdn.com/images/minlno/post/cb43d7f3-8d62-4f8f-9811-9f7af4f08b39/image.png "Figure 4.4: Call Graph: sys_mmap2()")
 
 do_mmap_pgoff()는 먼저 기본적인 sanity 검사를 수행한다. 파일이나 장치가 매핑되는 것이라면, 이는 먼저 적절한 파일시스템 또는 장치 함수가 이용가능한 지를 체크한다. 그런 다음, 이는 매핑의 크기가 페이지 크기로 정렬되어있는 지 확인하고, 만약 매핑이 커널 주소 공간에 대한 것이라면 매핑을 중단한다. 다음으로 매핑의 크기가 pgoff의 범위를 넘어가지 않음을 보장하며, 마지막으로 프로세스가 이미 너무 많은 region을 매핑하지 않았음을 보장한다.
 
@@ -391,8 +390,7 @@ Table 4.3: Memory Region VMA API
 
 Figure 4.5에서 볼 수 있듯이, 매핑되지 않은 영역을 찾는 것은 그렇게 많은 일을 요구하지 않는다. 함수는 많은 인자를 받는다. 매핑할 file이나 device를 나타내는 struct file, 파일 내에서 매핑할 영역의 오프셋인 pgoff가 인자로 전달된다. 또한 매핑의 주소인 address와 매핑의 length가 인자로 전달된다. 마지막으로는 영역의 보호 flags가 인자로 전달된다.
 
-![Figure 4.5](https://velog.velcdn.com/images/minlno/post/1853548b-4ab9-4e8e-ab93-320775d9ce1c/image.png)
-<figcaption> Figure 4.5: Call Graph: get_unmapped_area() </figcaption>
+![Figure 4.5](https://velog.velcdn.com/images/minlno/post/1853548b-4ab9-4e8e-ab93-320775d9ce1c/image.png "Figure 4.5: Call Graph: get_unmapped_area()")
 
 만약 비디오 카드와 같은 장치가 매핑된다면, 연관된 f_op->get_unmapped_area() 함수가 사용된다. 그 이유는 장치 또는 파일들은 일반적인 코드가 알 수 없는, 예를 들면 주소가 특정 가상 주소로 align되어야 한다던지,와 같은 추가적인 요구사항을 가질 수도 있기 때문이다.
 
@@ -401,8 +399,7 @@ Figure 4.5에서 볼 수 있듯이, 매핑되지 않은 영역을 찾는 것은 
 ### 4.4.6 Inserting a memory region
 
 새로운 메모리 region을 삽입하기 위한 주요 함수는 insert_vm_struct()이며, call graph는 Figure 4.6에서 확인할 수 있다. 이는 굉장히 단순한 함수로, 먼저 find_vma_prepare()을 호출하여 사이에 삽입하기위한 두 VMA와 red-black tree에 삽입하기 위해 필요한 노드를 찾는다. 그 다음에는 \_\_vma_link()를 호출하여 새로운 VMA를 연결하기 위한 작업을 수행한다.
-![Figure 4.6](https://velog.velcdn.com/images/minlno/post/40cdf49c-bf26-4fce-9adc-04b304842fb7/image.png)
-<figcaption> Figure 4.6: Call Graph: insert_vm_struct() </figcaption>
+![Figure 4.6](https://velog.velcdn.com/images/minlno/post/40cdf49c-bf26-4fce-9adc-04b304842fb7/image.png "Figure 4.6: Call Graph: insert_vm_struct()")
 
 insert_vm_struct()는 map_count 필드를 증가시키지 않기때문에 거의 사용하지 않는다. 그 대신, map_count를 증가시키면서 동일한 작업을 수행하는 \_\_insert_vm_struct()를 보통 사용한다.
 
@@ -423,23 +420,19 @@ Linux는 파일 또는 권한 문제가 없다면 인접한 메모리 영역을 
 ### 4.4.8 Remapping and moving a memory region
 
 mremap()은 기존의 메모리 매핑을 늘리거나 줄이기 위해 제공되는 시스템 콜이다. 이는 sys_mremap() 함수로 구현되며, 만약 region이 늘어나거나 다른 region과 중첩되게되고 MREMAP_FIXED 플래그가 설정되어 있지않다면 해당 region을 옮길 수도 있다. Call graph는 Figure 4.7에서 볼 수 있다.
-![](https://velog.velcdn.com/images/minlno/post/9d61a309-74a8-45cf-a8d1-468c966f8f30/image.png)
-<figcaption> Figure 4.7: Call Graph: sys_mremap() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/9d61a309-74a8-45cf-a8d1-468c966f8f30/image.png "Figure 4.7: Call Graph: sys_mremap()")
 
 만약 region을 옮겨야한다면, do_mremap()은 먼저 get_unmapped_area()를 호출하여 새로운 크기의 매핑을 포함할 수 있을만틈 큰 region을 찾고, move_vma()를 호출하여 기존의 VMA를 새로운 곳으로 옮긴다. move_vma()의 call graph는 Figure 4.8에서 볼 수 있다.
-![](https://velog.velcdn.com/images/minlno/post/5b0bed09-eb4b-4014-97c1-fbed6caee509/image.png)
-<figcaption> Figure 4.8: Call Graph: move_vma() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/5b0bed09-eb4b-4014-97c1-fbed6caee509/image.png "Figure 4.8: Call Graph: move_vma()")
 
 move_vma()는 옮겨간 곳 근처의 VMA와 합칠 수 있는 지를 먼저 확인한다. 만약 합칠 수 없다면, 새로운 VMA는 말그대로 한번에 하나의 PTE씩 할당된다. 다음으로는 move_page_tables()를 호출하여 기존 매핑의 페이지 테이블 엔트리를 새로운 곳에 복사한다 (Figure 4.9를 참조하라). 페이지 테이블을 옮기기 위한 더 나은 방식이 존재할 수도 있지만, 지금의 방식은 backtracking이 직관적이라 에러 복구 과정을 쉽게 해준다는 장점이 있다.
-![](https://velog.velcdn.com/images/minlno/post/387b170e-19c0-46ec-8559-ba0c0d6d8c0d/image.png)
-<figcaption> Figure 4.9: Call Graph: move_page_tables() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/387b170e-19c0-46ec-8559-ba0c0d6d8c0d/image.png "Figure 4.9: Call Graph: move_page_tables()")
 
 페이지의 내용 자체는 복사되지 않는다. 대신에, zap_page_range()가 호출되어 이전 매핑의 모든 페이지를 swap out하거나 제거하며, 추후에 페이지 폴트 핸들링 코드가 페이지를 스토리지 또는 파일로부터 다시 swap in 하거나, 장치 의존적인 do_nopage() 함수를 호출할 것이다.
 
 ### 4.4.9 Locking a Memory Region
 
-![](https://velog.velcdn.com/images/minlno/post/0d7f96cd-bffb-47d0-8c9f-7bb47edccceb/image.png)
-<figcaption> Figure 4.10: Call Graph: sys_mlock() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/0d7f96cd-bffb-47d0-8c9f-7bb47edccceb/image.png "Figure 4.10: Call Graph: sys_mlock()")
 
 Linux는 sys_mlock()을 통해 구현된 mlock() 시스템 콜을 통해 특정 주소 범위의 페이지들을 메모리에 락을 걸 수 있다. sys_mlock()의 call graph는 Figure 4.10에서 확인할 수 있다. 크게 보면 이 함수는 단순하다. 락을 걸 주소 범위에 대한 VMA를 생성하고, VM_LOCKED 플래그를 설정하고, 모든 페이지들을 make_pages_present()를 통해 강제로 present 상태로 만든다. sys_mlockall()을 통해 구현되는 시스템 콜인 mlockall() 또한 제공되며, 이는 sys_mlock()이 하는 일을 프로세스의 모든 VMA에 대해서 진행한다. 두 함수 모두 핵심 함수인 do_mlock()에 의존하며, 이는 region을 수정하기 위해 어떤 함수가 필요한 지 결정하는 일과 관련된 VMA들을 찾는 일을 실제로 수행한다.
 
@@ -458,8 +451,7 @@ Linux는 sys_mlock()을 통해 구현된 mlock() 시스템 콜을 통해 특정 
 ### 4.4.12 Deleting a memory region
 
 메모리 영역을 삭제하는 일은 do_munmap()이 담당한다. 이는 다른 메모리 영역 관련 함수들과 비교하여 상대적으로 간단하며, 기본적으로 세가지 부분으로 나눌 수 있다. 첫 번째는 unmap될 영역을 고려해 red-black tree을 수정하는 것이다. 두 번째는 해당 영역과 관련된 페이지들과 PTE들을 해제하는 것이며, 세 번째는 hole이 생겼다면 region들을 수정하는 것이다.
-![](https://velog.velcdn.com/images/minlno/post/09d6e11c-f5f4-4331-b81c-0f8f025d0e44/image.png)
-<figcaption> Figure 4.11: Call Graph: do_munmap() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/09d6e11c-f5f4-4331-b81c-0f8f025d0e44/image.png "Figure 4.11: Call Graph: do_munmap()")
 
 Red-black tree의 순서를 보장하기 위해, unmap으로 인해 영향을 받는 모든 VMA들을 free라고 불리는 linked list에 넣고, red-black tree로부터 rb_erase()를 이용하여 제거한다. 여전히 존재하는 region들은 그들의 새로운 주소를 이용하여 다시 추가될 것이다.
 
@@ -489,6 +481,7 @@ Red-black tree의 순서를 보장하기 위해, unmap으로 인해 영향을 �
 
 리눅스의 페이지 폴트 핸들러는 Table 4.4에 나열되어 있는 많은 수의 서로 다른 타입의 페이지 폴트를 인식하고 처리할 수 있어야하며, 이 장에서 곧 다룰 것이다.
 
+{{< table title="Table 4.4: Reasons For Page Faulting" >}}
 Exception | Type | Action
 --- | --- | ---
 Region은 valid하지만, 페이지가 할당되지 않음 | Minor | 물리 메모리 할당자를 통해 페이지 프레임을 할당
@@ -499,17 +492,15 @@ Read-only page에 대한 쓰기를 수행함 | Minor | 만약 해당 페이지�
 Region이 invalid하거나 프로세스가 접근할 권한이 없음 | Error | 프로세스에게 SIGSEGV 시그널을 보냄
 커널 주소 공간에서 폴트가 발생함 | Minor | 만약 폴트가 vmalloc 영역에서 발생했다면, 현재 프로세스 페이지 테이블을 init_mm에 의해 유지되는 마스터 페이지 테이블을 기준으로 업데이트함. 이것이 커널 페이지 폴트가 valid한 유일한 경우임.
 커널 모드에서 유저 공간 영역에 대해 Fault가 발생함 | Error | 만약 폴트가 발생하면, 이것은 커널이 유저 공간에서 적절한 복사를 수행하지 않았다는 것을 의미함. 이것은 꽤 심각하게 다루어지는 커널 버그이다.
-<figcaption> Table 4.4: Reasons For Page Faulting </figcaption>
+{{< /table >}}
 
 각 아키텍처는 페이지 폴트를 처리하기위한 아키텍처 의존적인 함수를 등록한다. 이 함수의 이름은 임의로 지어지지만, 보통은 do_page_fault()이며, x86의 call grap를 Figure 4.12에서 볼 수 있다.
 
-![](https://velog.velcdn.com/images/minlno/post/82855460-2a86-4f5f-9b69-24df1b1bde8b/image.png)
-<figcaption> Figure 4.12: Call Graph: do_page_fault() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/82855460-2a86-4f5f-9b69-24df1b1bde8b/image.png "Figure 4.12: Call Graph: do_page_fault()")
 
 이 함수에는 폴트가 발생한 주소, 페이지가 단순히 없어서 폴트가 발생한 것인지 아니면 protection error인지, 읽기 또는 쓰기로 인한 폴트인지, 유저 또는 커널 공간에서의 폴트인지와 같은 풍부한 정보가 제공된다. 이 함수는 이 정보를 토대로 어떤 타입의 폴트가 발생한 것인지를 판단하고, 이 폴트가 아키텍처 독립적인 코드에 의해 어떻게 처리되어야할 지를 결정한다. Figure 4.13의 flow chart는 이 함수가 일반적으로 하는 일을 보여준다. 이 Figure에서 콜론이 붙어있는 식별자는 실제 코드에서의 label과 동일하다.
 
-![](https://velog.velcdn.com/images/minlno/post/61c27fe1-2884-492f-9d6a-3c8a70b28a52/image.png)
-<figcaption> Figure 4.13: do_page_fault() Flow Diagram </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/61c27fe1-2884-492f-9d6a-3c8a70b28a52/image.png "Figure 4.13: do_page_fault() Flow Diagram")
 
 handle_mm_fault()은 아키텍저 독립적인 가장 윗 단계의 함수이며, 스토리지에 있는 페이지에 대한 폴트 처리, COW 수행 등등의 작업을 처리한다. 이 함수가 1을 반환하면 그것이 minor fault였음을 의미하며, 2라면 major임을 의미하고, 0은 SIGBUS error, 나머지 다른 값들은 out of memory handler를 깨워 전달되게 된다.
 
@@ -518,8 +509,7 @@ handle_mm_fault()은 아키텍저 독립적인 가장 윗 단계의 함수이며
 예외 처리자가 어떠한 폴트가 valid memory region에서의 valid page에 대한 폴트임을 알았다면, 해당 폴트는 아키텍처 독립적인 함수인 handle_mm_fault()가 이어서 처리하게된다 (Call graph는 Figure 4.14에서 확인할 수 있다). 이 함수는 만약 필요한 페이지 테이블 엔트리가 없다면 이를 할당하고 handle_pte_fault()를 호출한다.
 
 PTE의 속성에 따라, Figure 4.14에서 볼 수 있는 핸들러 함수 중 하나가 사용된다. 이 함수는 먼저 pte_present()와 pte_none()을 통해 PTE가 present한지, PTE가 할당된 적이 있는 지를 체크한다. 만약 어떠한 PTE도 할당된 적 없었다면 (pte_none()이 true를 반환한다면), do_no_page()가 호출되어 Demand Allocation을 수행한다. 그렇지 않다면 해당 페이지는 disk로 스왑 아웃된 것이므로, do_swap_page()가 호출되어 Demand Paging을 수행한다. 흔치 않은 경우로 virtual file에 속한 페이지가 스왑 아웃된 경우에는 do_no_page()가 이를 처리한다. 이에 대해서는 섹션 12.4에서 다룬다.
-![](https://velog.velcdn.com/images/minlno/post/da697a30-6573-4b2a-8c7e-9752ffb5eee8/image.png)
-<figcaption> Figure 4.14: Call Graph: handle_mm_fault() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/da697a30-6573-4b2a-8c7e-9752ffb5eee8/image.png "Figure 4.14: Call Graph: handle_mm_fault()")
 
 두 번째 옵션은 페이지가 쓰여질 것인지다. 만약 PTE가 write protection이 걸려있다면, page는 Copy-On-Write (COW) page이기 때문에 do_wp_page()가 호출된다. COW page는 쓰기가 발생하기 전까지 여러 프로세스들(보통 parent와 child)에 의해 공유되다가, 쓰기를 수행하는 프로세스에 의해 복사본이 생성된다. COW page는 VMA가 writable 하지만 PTE가 writable 하지 않다는 것을 이용하여 구별할 수 있다. 만약 페이지가 COW page가 아닌 경우, 페이지는 단순히 dirty 하다고 표시된다.
 
@@ -532,8 +522,7 @@ PTE의 속성에 따라, Figure 4.14에서 볼 수 있는 핸들러 함수 중 �
 #### Handling anonymous pages
 
 만약 vma->vm_ops 필드가 비어있거나 nopage() 함수가 제공되지않는 경우, do_anonymous_page()가 호출되어 anonymous 접근을 처리한다. 처리해야하는 케이스에는 두 가지가 있는데, 처음 읽는 경우와 처음 쓰는 경우이다. Anonymous page의 경우, 처음 읽을 때에는 아직 데이터가 없으므로 처리가 가장 쉽다. 이 경우에는 시스템이 제공하는 0으로 채워진 페이지인 empty_zero_page가 PTE에 매핑되고, write protection을 설정한다. Write protection이 설정되기 때문에, 프로세스가 해당 페이지에 쓰기를 수행하면 추가적인 페이지 폴트가 발생한다. x86의 경우, 전역 zero page가 mem_init()에서 초기화된다.
-![](https://velog.velcdn.com/images/minlno/post/99e58f02-5aec-46e9-8df2-f4c50b650168/image.png)
-<figcaption> Figure 4.15: Call Graph: do_no_page() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/99e58f02-5aec-46e9-8df2-f4c50b650168/image.png "Figure 4.15: Call Graph: do_no_page()")
 
 첫 번째로 페이지를 쓰는 경우에는 alloc_page() 함수를 호출하여 새로운 페이지를 할당하며 (6장 참조), clear_user_highpage()를 통해 0으로 초기화한다. 페이지가 성공적으로 할당되었다면, mm_struct의 Resident Set Size (RSS) 필드를 증가시킨다. 일부 아키텍처의 경우 캐시 일관성을 보장하기 위해 페이지가 유저 공간의 프로세스에 삽입되는 경우 필요에 따라 flush_page_to_ram()을 호출한다. 그런 다음 페이지는 LRU list에 삽입되어 추후에 페이지 회수 코드에 의해 회수될 수 있도록 한다. 마지막으로 새로운 매핑을 프로세스의 페이지 테이블에 추가한다.
 
@@ -549,8 +538,7 @@ PTE의 속성에 따라, Figure 4.14에서 볼 수 있는 핸들러 함수 중 �
 
 페이지가 백업 스토리지로 스왑 아웃된 상태라면, 섹션 12에서 다루게될 virtual file인 경우를 제외하면, do_swap_page() 함수가 호출되어 페이지를 다시 읽어온다. 페이지를 스토리지에서 찾기 위해 필요한 정보는 PTE 자체에 저장되어 있다. PTE에 있는 정보는 swap 영역에서 페이지를 찾기에 충분하다. 페이지들은 다수의 프로세스들에 의해 공유될 수 있기 때문에, 그들은 항상 즉시 스왑 아웃될 수 있는 것은 아니다. 대신에, 페이지가 스왑아웃 될 때에, 그들은 swap cache에 위치하게 된다.
 
-![](https://velog.velcdn.com/images/minlno/post/09ae117b-fac6-4394-9788-6ed894cbac04/image.png)
-<figcaption> Figure 4.16: Call Graph: do_swap_page() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/09ae117b-fac6-4394-9788-6ed894cbac04/image.png "Figure 4.16: Call Graph: do_swap_page()")
 
 struct page를 이를 공유하는 각 프로세스의 PTE에 대해 매핑하는 방법이 없기 때문에, 공유되는 페이지를 즉시 스왑 아웃할 수는 없다. 모든 프로세스들의 페이지 테이블을 탐색하는 방법은 너무 오버헤드가 크다. 2.5.x 커널 후반 버전과 2.4.x의 커스텀 패치 버전은 Reverse Mapping (Rmap)이라는 기술을 포함한다는 것을 알고있으면 좋으며, 이는 이 장의 마지막 부분에서 다룰 것이다.
 
@@ -561,8 +549,7 @@ swap cache가 존재하기 때문에, fault가 발생했을 때 해당 페이지
 ### 4.6.4 Copy On Write (COW) Pages
 
 예전에는 fork 할 때, 부모 주소 공간 전체를 child를 위해 복제했었다. 프로세스의 대부분을 백업 스토리지로부터 swap in 해야하는 상황이 발생할 수 있기 때문에, 이는 극도로 비싼 작업이었다. 상당한 오버헤드를 피하기 위해, Copy-On-Write라는 기술이 도입되었다.
-![](https://velog.velcdn.com/images/minlno/post/16f9a6c9-94c1-4402-a6a8-1d2660a8beed/image.png)
-<figcaption> Figure 4.17: Call Graph: do_wp_page() </figcaption>
+![](https://velog.velcdn.com/images/minlno/post/16f9a6c9-94c1-4402-a6a8-1d2660a8beed/image.png "Figure 4.17: Call Graph: do_wp_page()")
 
 Fork를 하는 동안, 두 프로세스의 PTE들을 read-only로 설정하여 write가 발생하면 page fault가 발생하도록 한다. Linux는 COW page를 인지할 수 있는데, 이는 PTE가 write protect되더라도, 해당하는 VMA는 여전히 writable로 표시되기 때문이다. COW은 do_wp_page()를 통해 수행되며, 이는 페이지의 복사본을 만들고 쓰기를 수행한 프로세스에 매핑한다. 필요한 경우, 새로운 swap slot이 페이지에게 예약될 것이다. 이 방법을 통해, fork 과정에서는 오로지 페이지 테이블 엔트리만이 복사된다.
 

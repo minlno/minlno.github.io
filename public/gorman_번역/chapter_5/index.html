@@ -1,26 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chapter 5 Boot Memory Allocator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
+    <title>김민호의 공부기록장</title>
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/">홈</a></li>
-                <li><a href="/categories/">목차</a></li>
-            </ul>
-        </nav>
-    </header>
+
+</head>
+<body>
     <main>
         
 <article>
     <h1>Chapter 5 Boot Memory Allocator</h1>
     <p><small>2024-05-17</small></p>
-    <div>
+    <div class="post-content">
         <p>이 글은 Gorman 책 &ldquo;Understanding the Linux Virtual Memory Manager&quot;의 <a href="https://www.kernel.org/doc/gorman/html/understand/understand008.html">Chapter 5</a>를 번역한 글입니다.</p>
 <hr>
 <p>하드웨어 구성의 조합의 수가 매우 많기 때문에, 컴파일 타임에 정적으로 핵심 커널 메모리 자료구조들을 초기화하는 것은 비현실적이다. 그러나 다음 장에서 설명할 물리 페이지 할당자조차도 자기자신을 초기화하기 위해 메모리를 할당해야한다. 그러나 어떻게 물리 페이지 할당자가 자기자신을 위한 메모리를 할당할 수 있겠는가.</p>
@@ -111,16 +110,16 @@
 </ul>
 <h2 id="51-representing-the-boot-map">5.1 Representing the Boot Map</h2>
 <p>시스템의 각 메모리 노드마다 bootmem_data라는 구조체가 존재한다. 이는 부트 메모리 할당자가 해당 노드의 메모리를 할당하기위해 필요한 정보를 포함하며, 여기에는 할당된 페이지를 표시하는 비트맵과 어디에 메모리가 위치해있는지 등이 포함된다. &lt;linux/bootmem.h&gt;에 아래와 같이 선언된다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#f92672">&lt;</span>linux<span style="color:#f92672">/</span>bootmem.h<span style="color:#f92672">&gt;:</span>
-
- <span style="color:#ae81ff">25</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> bootmem_data {
- <span style="color:#ae81ff">26</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_boot_start;
- <span style="color:#ae81ff">27</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_low_pfn;
- <span style="color:#ae81ff">28</span>     <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>node_bootmem_map;
- <span style="color:#ae81ff">29</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> last_offset;
- <span style="color:#ae81ff">30</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> last_pos;
- <span style="color:#ae81ff">31</span> } bootmem_data_t;
-</code></pre></div><p>각 필드에 대한 설명은 다음과 같다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>linux<span style="color:#f92672">/</span>bootmem.h<span style="color:#f92672">&gt;:</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">25</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> bootmem_data {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">26</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_boot_start;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">27</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_low_pfn;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">28</span>     <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>node_bootmem_map;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">29</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> last_offset;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">30</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> last_pos;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">31</span> } <span style="color:#66d9ef">bootmem_data_t</span>;
+</span></span></code></pre></div><p>각 필드에 대한 설명은 다음과 같다:</p>
 <ul>
 <li>node_boot_start: 이 블록의 시작 물리 주소이다.</li>
 <li>node_low_pfn: 끝 물리 주소, 즉, 이 노드가 표현하는 ZONE_NORMAL의 끝 주소이다.</li>
@@ -141,12 +140,18 @@
 <h3 id="521-initialising-bootmem_data">5.2.1 Initialising bootmem_data</h3>
 <p>이용가능한 물리 메모리의 limit들을 setup_memory()를 통해 알게되면, 두 부트 메모리 초기화 함수 중 하나를 초기화할 노드의 시작과 끝 PFN을 인자로 호출한다. UMA 아키텍처에서는 contig_page_data를 초기화하는 init_bootmem()을 사용하며, NUMA에서는 특정 노드를 초기화하는 init_bootmem_node()를 사용한다. 두 함수는 모두 init_bootmem_core()을 호출하여 실제 중요한 일을 하게된다.</p>
 <p>핵심 함수는 먼저 pgdat_data_t를 pgdat_list에 삽입하며, 이 함수가 끝나면 해당 노드는 사용할 준비가 된다. 이 함수는 다음으로 노드와 관련된 bootmem_data_t에 노드의 시작과 끝 주소를 기록하며, 페이지 할당을 표현하는 비트맵을 할당한다. 비트맵의 바이트 크기는 다음과 같이 계산된다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">mapsize <span style="color:#f92672">=</span> ((end_pfn <span style="color:#f92672">-</span> start_pfn) <span style="color:#f92672">+</span> <span style="color:#ae81ff">7</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">8</span>
-</code></pre></div><p>비트맵이 표현하는 물리 주소는 bootmem_data_t-&gt;node_boot_start에 저장되며, 비트맵의 가상주소는 bootmem_data_t-&gt;node_bootmem_map에 저장된다. 메모리의 hole을 감지할 수 있는 아키텍처 독립적인 방법이 없기 때문에, 전체 비트맵은 1로 초기화되어 모든 페이지를 할당된 상태로 표시한다. 사용 가능한 페이지의 비트를 0으로 설정하는 것은 아키텍처 의존적인 코드에 달려있지만, 실제로 Sparc 아키텍처만 이 비트맵을 사용한다. x86의 경우 register_bootmem_low_pages() 함수가 e820 맵을 읽고 free_bootmem()을 호출하여 사용 가능한 각 페이지의 비트를 0으로 설정한 후, reserve_bootmem()을 사용하여 실제 비트맵에 필요한 페이지를 예약한다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>mapsize <span style="color:#f92672">=</span> ((end_pfn <span style="color:#f92672">-</span> start_pfn) <span style="color:#f92672">+</span> <span style="color:#ae81ff">7</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">8</span>
+</span></span></code></pre></div><p>비트맵이 표현하는 물리 주소는 bootmem_data_t-&gt;node_boot_start에 저장되며, 비트맵의 가상주소는 bootmem_data_t-&gt;node_bootmem_map에 저장된다. 메모리의 hole을 감지할 수 있는 아키텍처 독립적인 방법이 없기 때문에, 전체 비트맵은 1로 초기화되어 모든 페이지를 할당된 상태로 표시한다. 사용 가능한 페이지의 비트를 0으로 설정하는 것은 아키텍처 의존적인 코드에 달려있지만, 실제로 Sparc 아키텍처만 이 비트맵을 사용한다. x86의 경우 register_bootmem_low_pages() 함수가 e820 맵을 읽고 free_bootmem()을 호출하여 사용 가능한 각 페이지의 비트를 0으로 설정한 후, reserve_bootmem()을 사용하여 실제 비트맵에 필요한 페이지를 예약한다.</p>
 <h2 id="53-allocating-memory">5.3 Allocating Memory</h2>
 <p>reserve_bootmem() 또한 사용할 페이지를 예약하기위해 사용될 수 있지만, 이는 범용적인 할당을 위해서는 사용하기 매우 번거롭다. UMA 아키텍처의 경우 쉬운 할당을 위해 alloc_bootmem(), alloc_bootmem_low(), alloc_bootmem_pages() 그리고 alloc_bootmem_low_pages() 함수가 제공되며, Table 5.1에 설명이 나와있다. 이 함수들의 call graph가 Figure 5.1에 나와있다.
-<img src="https://velog.velcdn.com/images/minlno/post/0a5db7e6-078d-400b-bfed-a4c5698dc895/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/0a5db7e6-078d-400b-bfed-a4c5698dc895/image.png" alt="">
+    <figcaption>Figure 5.1: Call Graph: alloc_bootmem()</figcaption>
+  </figure>
+
+
+NUMA에도 노드를 추가 인자로 받는 비슷한 함수들이 존재하며, Table 5.2에 나와있다. 이들은 alloc_bootmem_node(), alloc_bootmem_pages_node() 그리고 alloc_bootmem_low_pages_node()라고 불리며, 모두 __alloc_bootmem_node()를 서로 다른 인자를 통해 호출하게된다.</p>
 <p>__alloc_bootmem()과 __alloc_bootmem_node()가 받는 인자는 본질적으로 동일하다:</p>
 <ul>
 <li>pgdat: 할당할 노드이다. UMA의 경우 생략되며, contig_page_data로 가정된다.</li>
@@ -168,8 +173,13 @@
 <p>free 함수의 중요한 제약 사항은 오로지 전체 페이지만 해제할 수 있다는 것이다. 페이지가 부분 할당되었다는 것은 기록이 되지 않기 때문에, 만약 부분 해제하는 경우에는 전체 페이지가 할당된 상태로 남게된다. 시스템의 lifetime 동안 할당이 항상 지속되는 것처럼 보이므로, 이것은 major한 문제는 아니다. 그렇지만, 여전히 부트 타임동안 개발자에게 중요한 제약 사항이다.</p>
 <h2 id="55-retiring-the-boot-memory-allocator">5.5 Retiring the Boot Memory Allocator</h2>
 <p>Bootstrapping 프로세스의 후반부에, start_kernel() 함수가 호출되는데, 이때는 boot allocator와 관련 자료구조들을 모두 삭제해도 안전하다. 각 아키텍처들은 boot memory allocator와 관련 자료구조들을 제거하는 함수인 mem_init()을 제공할 의무가 있다.
-<img src="https://velog.velcdn.com/images/minlno/post/39977de6-48ce-4ece-b312-a78db65073d1/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/39977de6-48ce-4ece-b312-a78db65073d1/image.png" alt="">
+    <figcaption>Figure 5.2: Call Graph: mem_init()</figcaption>
+  </figure>
+
+</p>
 <p>이 함수의 목적은 꽤 단순하다. low와 high memory의 dimension들을 계산하고, 관련 정보를 유저에게 출력하며, 필요한 경우 하드웨어의 최종 초기화 작업을 수행한다. x86에서, VM과 관련이 있는 주요 함수는 free_pages_init()이다.</p>
 <p>이 함수는 먼저 UMA의 경우 free_all_bootmem(), NUMA의 경우 free_all_bootmem_node()를 호출하여 boot memory allocator가 은퇴하도록 한다. 두 함수 모두 free_all_bootmem_core()를 서로 다른 인자로 호출한다. core 함수는 단순한 원칙으로 동작하며 다음과 같은 작업을 수행한다:</p>
 <ul>
@@ -183,12 +193,17 @@
 <li>비트맵을 위해 사용되고 있던 모든 페이지들을 해제하고 buddy allocator에게 준다.</li>
 </ul>
 <p>이 단계에서, buddy allocator는 이제 low memory의 모든 페이지에 대한 제어권을 가진다. free_all_bootmem()이 반환한 이후에는, accounting 목적으로 reserved page들의 수를 먼저 카운팅한다. free_pages_init() 함수의 나머지는 high memory page들에 대한 것이다. 그러나, 이 시점에서 global mem_map 배열이 어떻게 할당되고 초기화되며 main allocator에게 페이지가 주어지는 지를 명백히 알아야 한다. 싱글 노드 시스템에서 low memory의 페이지들을 초기화하는 기본 플로우가 Figure 5.3에 나타나있다.
-<img src="https://velog.velcdn.com/images/minlno/post/9538c743-d256-4fbe-9fcc-70b8f13b5383/image.png" alt=""></p>
-<!-- raw HTML omitted -->
+
+  <figure>
+    <img src="https://velog.velcdn.com/images/minlno/post/9538c743-d256-4fbe-9fcc-70b8f13b5383/image.png" alt="">
+    <figcaption>Figure 5.3: Initialising mem_map and the Main Physical Page Allocator</figcaption>
+  </figure>
+
+</p>
 <p>free_all_bootmem()이 반환하고나면, ZONE_NORMAL의 모든 페이지가 버디 할당자에게 반환된다. high memory 페이지들을 초기화하기위해, free_pages_init()은 highstart_pfn부터 highend_pfn 사이의 모든 페이지에 대해 one_highpage_init() 함수를 호출한다. one_highpage_init()은 단순히 PG_reserved 플래그를 클리어하고, PG_highmem 플래그를 set하며, count를 1로 설정하고, __free_pages()를 호출하여 이 페이지를 free_all_bootmem_core()가 그랬던 것처럼 버디 할당자에게 반환한다.</p>
 <p>이 시점에서, 부트 메모리 할당자는 더이상 필요하지 않으며, 버디 할당자가 시스템의 메인 물리 페이지 할당자가 된다. 흥미로운 사실은 부트 할당자를 위한 데이터뿐만 아니라 시스템의 bootstrap에 사용된 코드 또한 모두 삭제된다는 것이다. 시스템 start-up 과정에만 필요한 초기화 함수들은 모두 다음과 같이 __init으로 표시된다:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">321</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> __init free_all_bootmem (<span style="color:#66d9ef">void</span>)
-</code></pre></div><p>링커는 이러한 함수들을 모두 .init 섹션에 위치시킨다. x86에서 free_initmem() 함수는 __init_begin부터 __init_end 사이의 모든 페이지를 순회하면서 해당 페이지들을 버디 할당자에게 반환한다. 이러한 방법으로 리눅스는 더이상 필요없는 bootstrap 코드에 사용되는 상당량의 메모리를 해제할 수 있다. 예를 들어, 이 문서를 작성하고 있는 머신의 커널을 부팅하는 동안 27개의 페이지가 해제되었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">321</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> __init <span style="color:#a6e22e">free_all_bootmem</span> (<span style="color:#66d9ef">void</span>)
+</span></span></code></pre></div><p>링커는 이러한 함수들을 모두 .init 섹션에 위치시킨다. x86에서 free_initmem() 함수는 __init_begin부터 __init_end 사이의 모든 페이지를 순회하면서 해당 페이지들을 버디 할당자에게 반환한다. 이러한 방법으로 리눅스는 더이상 필요없는 bootstrap 코드에 사용되는 상당량의 메모리를 해제할 수 있다. 예를 들어, 이 문서를 작성하고 있는 머신의 커널을 부팅하는 동안 27개의 페이지가 해제되었다.</p>
 <h2 id="56-whats-new-in-26">5.6 What&rsquo;s New in 2.6</h2>
 <p>부트 메모리 할당자는 2.4 이후로 많이 바뀌지 않았으며, 주로 최적화나 마이너한 NUMA 관련 수정에 집중되었다. 첫 최적화는 bootmem_data_t 구조체에 last_success 필드가 추가된 것이다. 이름에서 알 수 있듯이, 이것은 탐색 시간을 줄이기 위해 마지막으로 성공한 할당의 위치를 추적한다. 만약 last_success 이전의 주소가 해제되면, 이 값은 해제된 위치로 수정될 것이다.</p>
 <p>두 번째 최적화 또한 선형 탐색과 관련이 있다. free page를 찾을 때, 2.4는 비싼 작업인 모든 비트를 테스트하는 작업을 수행했다. 2.6은 그 대신 BIT_PER_LONG 만큼의 블록마다 모두 1인지를 테스트한다. 만약 아니라면, 그때서야 블록안의 비트들을 개별적으로 테스트한다. 선형 탐색을 돕기 위해, 노드들은 init_bootmem()에 의해 물리 주소순으로 정렬된다.</p>

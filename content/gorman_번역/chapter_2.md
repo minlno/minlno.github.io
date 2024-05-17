@@ -24,8 +24,7 @@ x86에서의 존의 모습은 아래와 같다:
 
 중요한 사실은 많은 커널 동작들이 ZONE_NORMAL만을 사용할 수 있기 때문에, 이것이 가장 성능에 중요한 존이라는 것이다. 존은 2.2절에서 더 자세히 논의된다. 각 물리 페이지 프레임은 **struct page**로 표현되며, 모든 페이지 구조체들은 전역 **mem_map** 배열로 관리된다. mem_map 배열은 보통 ZONE_NORMAL의 시작 부분에 저장되거나 메모리가 작은 머신에서는 커널 이미지를 위해 예약된 메모리 바로 다음 부분에 저장된다. struct page, mem_map 배열은 각각 2.4, 3.7절에서 보다 구체적으로 논의된다. 이 모든 구조체들의 관계가 Figure 2.1에 나타나있다.
 
-![Figure 2.1](https://velog.velcdn.com/images/minlno/post/79059ccd-5b84-4d4a-b0d2-f1b907c67a20/image.png)
-<figcaption> Figure 2.1: 노드, 존, 그리고 페이지 사이의 관계도 </figcaption>
+![Figure2.1](/images/gorman_번역/figure2.1.png "Figure 2.1: 노드, 존, 그리고 페이지 사이의 관계도")
 
 커널에 의해 직접 접근될 수 있는 메모리(ZONE_NORMAL)의 양이 제한적이기 때문에, 리눅스는 2.5절에서 더 자세히 논의될 **High Memory** 라는 개념을 지원한다. 이 장은 노드, 존, 그리고 페이지가 어떻게 표현되는 지 논의하고, 그 다음으로 high memory 관리에 대해 소개할 것이다.
 
@@ -116,10 +115,7 @@ x86에서의 존의 모습은 아래와 같다:
 
 각 존은 해당 존이 얼마나 큰 메모리 압력을 받고있는 지를 판단하는 데 도움을 주는 **pages_low**, **pages_min**, 그리고 **pages_high**, 총 3개의 워터마크를 가진다. 이들 사이의 관계는 Figure 2.2에 나타나있다. pages_min의 크기는 메모리 초기화 과정에서 free_area_init_core() 함수가 존의 페이지 수에 대한 일정 비율로 계산한다. 초기에는 ZoneSizePages / 128로 계산된다. 가장 낮은 값은 20 페이지(x86의 경우 80K)이고 가능한 가장 높은 값은 255 페이지(x86의 경우 1M)이다.
 
-![Figure 2.2](https://velog.velcdn.com/images/minlno/post/62d404ff-203a-4cc5-98cf-e7b147b68792/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 2.2: 존 워터마크
-</figcaption>
+![Figure 2.2](https://velog.velcdn.com/images/minlno/post/62d404ff-203a-4cc5-98cf-e7b147b68792/image.png "Figure 2.2: 존 워터마크")
 
 - **pages_low**: free 페이지가 pages_low에 도달하면, 버디 할당자에 의해 kswapd가 깨어나 페이지를 해제한다. 이는 Solaris에서 lotsfree에 도달하거나, FreeBSD에서 freemin에 도달한 것과 동일하다. 기본값은 pages_min의 2배로 설정된다.
 
@@ -131,10 +127,7 @@ x86에서의 존의 모습은 아래와 같다:
 
 ### 2.2.2 Calculating The Size of Zones
 
-![Figure 2.3](https://velog.velcdn.com/images/minlno/post/de1c7f22-0f81-4a86-8364-e4f5382efe4f/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 2.3: Call Graph: setup_memory()
-</figcaption>
+![Figure 2.3](https://velog.velcdn.com/images/minlno/post/de1c7f22-0f81-4a86-8364-e4f5382efe4f/image.png "Figure 2.3: Call Graph: setup_memory()")
 
 PFN은 physical memory map에서 page 기준으로 셌을 때의 offset이다. 시스템이 사용할 수 있는 첫번째 PFN은 min_low_pfn으로, 로드된 커널 이미지의 마지막 pfn인 \_end 뒤에 위치한 첫 페이지의 PFN과 같다. 그 값은 boot memory allocator가 사용할 수 있도록 mm/bootmem.c에 file scope 변수로 저장되어있다.
 
@@ -150,10 +143,7 @@ page에 대한 IO가 수행되고 있는 경우, 예를 들어 page-in 또는 pa
 
 zone에 단 하나의 wait queue만을 구현하는 방식도 가능하겠지만, 이는 zone의 아무 page에 대해 기다리고 있던 모든 프로세스들이 어떤 한 page가 unlock될 때 깨어난다는 것을 의미한다. 즉, 이는 심각한 'thundering herd' 문제를 야기한다. 이렇게 구현하는 대신, wait queue들의 해시테이블이 zone_t->wait_table에 저장된다. 해시 충돌이 발생하면 프로세스들이 여전히 불필요하게 깨어나게 되겠지만, 충돌은 그렇게 자주 발생하지는 않는다.
 
-![Figure 2.4](https://velog.velcdn.com/images/minlno/post/9edc4e43-6c73-471d-adfb-03757e3a9803/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 2.4: Sleeping On a Locked Page
-</figcaption>
+![Figure 2.4](https://velog.velcdn.com/images/minlno/post/9edc4e43-6c73-471d-adfb-03757e3a9803/image.png "Figure 2.4: Sleeping On a Locked Page")
 
 wait table은 free_area_init_core() 함수에서 할당된다. table의 크기는 wait_table_size()에서 계산되며, zone_t->wait_table_size에 저장된다. 최대 크기는 4096개의 wait queue이다. 더 작은 테이블의 경우, 테이블의 크기는 NoPages / PAGES_PER_WAITQUEUE 개의 큐를 저장할 수 있도록하는 2의 거듭제곱 중 최솟값이다 (NoPages: 존의 페이지 개수, PAGES_PER_WAITQUEUE: 256으로 정의된 상수). 즉, 테이블의 크기는 아래의 수식의 정수 부분으로 계산된다:
 ```
@@ -180,10 +170,7 @@ zone_t->wait_table_shift는 table의 인덱스로 쓰이기 위해 page address�
 
 mem_map 영역은 시스템 시작 과정동안 둘 중에 하나의 방식으로 형성된다. NUMA 시스템에서는, global mem_map은 PAGE_OFFSET에서 시작하는 가상 배열로 다루어진다. free_area_init_node()는 각 active 노드에 대해 호출되어, 노드에 해당하는 mem_map의 일부분을 할당한다. UMA 시스템에서는, free_area_init()이 contig_page_data를 노드로 사용하고 global mem_map을 이 노드의 "local" mem_map으로 사용한다. 각 함수의 call graph는 Figure 2.5에 나타나있다.
 
-![Figure 2.5](https://velog.velcdn.com/images/minlno/post/1e4006e5-2edb-40a7-88c3-72f73bbb92c8/image.png)
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:40px">
-    Figure 2.5: Call Graph: free_area_init()
-</figcaption>
+![Figure 2.5](https://velog.velcdn.com/images/minlno/post/1e4006e5-2edb-40a7-88c3-72f73bbb92c8/image.png "Figure 2.5: Call Graph: free_area_init()")
 
 핵심 함수인 free_area_init_core()는 초기화되고있는 노드의 local lmem_map을 할당한다. 배열의 메모리는 boot memory allocator의 alloc_bootmem_node() 함수를 통해 할당된다 (5장 참조). UMA의 경우 새로 할당된 이 메모리가 global mem_map이 되지만, NUMA는 이와 약간 다른 점이 존재한다.
 
@@ -225,6 +212,7 @@ NUMA 아키텍처는 해당 노드의 메모리에 lmem_map을 위한 메모리�
 
 mem_map_t 타입은 mem_map 배열에서 쉽게 참조될 수 있도록 도와주는 struct page의 typedef이다.
 
+{{< table title="Table 2.1: Flags Describing Page Status" >}}
  **Bit name**  |      **설명**      
  ------------  | -----------
 PG_active   | 이 비트는 page가 active_list에 속해있을 때 set되고, 제거될 때 clear된다. page가 hot함을 표시한다.
@@ -241,11 +229,10 @@ PG_referenced | 만약 페이지가 매핑되어있고 매핑을 통해서 참�
 PG_slab | slab allocator에 의해 페이지가 사용될 때 set한다.
 PG_skip | 물리 메모리가 존재하지않는 주소 공간을 스킵하기 위해 어떤 아키텍처들이 사용한다.
 PG_unused | 말그대로 사용되지 않는 비트이다.
-PG_uptodate &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| disk에서 페이지가 오류없이 읽혀졌다면, 이 비트가 set된다.
-<figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:10px">
-    Table 2.1: Flags Describing Page Status
-</figcaption>
+PG_uptodate | disk에서 페이지가 오류없이 읽혀졌다면, 이 비트가 set된다.
+{{< /table >}}
 
+{{< table title="Table 2.2: Macros For Testing, Setting and Clearing page→flags Status Bits" >}}
 **Bit name**  |   **Set** | **Test** | **Clear**     
  ------------  | ----------- | --- | ---
  PG_active | SetPageActive() | PageActive() | ClearPageActive()
@@ -263,10 +250,7 @@ PG_skip	|n/a	|n/a	|n/a
 PG_slab	|PageSetSlab()|	PageSlab()	|PageClearSlab()
 PG_unused	|n/a	|n/a|	n/a
 PG_uptodate	|SetPageUptodate()	|PageUptodate()	|ClearPageUptodate()
- <figcaption style="text-align:center; font-size:15px; color:#808080; margin-top:10px">
-    Table 2.2: Macros For Testing, Setting and Clearing page→flags Status Bits
-</figcaption>
-
+{{< /table >}}
 
 ### 2.4.1 Mapping Pages to Zones
 
