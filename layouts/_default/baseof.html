@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta name="generator" content="Hugo 0.68.3" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>김민호의 공부기록장</title>
+    <title>{{ .Title }}</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -17,10 +16,7 @@
         </nav>
     </header>
     <main>
-        
-<h1>공부 기록장</h1>
-<p> 나만의 웹사이트를 꾸며봅시다</p>
-
+        {{ block "main" . }}{{ end }}
     </main>
     <script src="/js/scripts.js"></script>
 </body>

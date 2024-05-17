@@ -3,12 +3,27 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://minlno.github.io/</loc>
+    <loc>http://minlno.github.io/categories/</loc>
     <lastmod>2024-05-17T02:10:54+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://minlno.github.io/categories/</loc>
+    <loc>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_2/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_3/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_4/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_5/</loc>
     <lastmod>2024-05-17T02:10:54+09:00</lastmod>
   </url>
   
@@ -18,28 +33,17 @@
   </url>
   
   <url>
-    <loc>http://minlno.github.io/post/first_post/</loc>
+    <loc>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/</loc>
     <lastmod>2024-05-17T02:10:54+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://minlno.github.io/post/second_post/</loc>
-    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://minlno.github.io/post/</loc>
+    <loc>http://minlno.github.io/</loc>
     <lastmod>2024-05-17T02:10:54+09:00</lastmod>
   </url>
   
   <url>
     <loc>http://minlno.github.io/tags/</loc>
-    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://minlno.github.io/tags/virtual-memory/</loc>
-    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
   </url>
   
 </urlset>

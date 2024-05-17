@@ -1,11 +1,29 @@
-baseURL = 'http://minlno.github.io/'
-languageCode = 'en-us'
-theme = 'hugo-xmin'
-enableEmoji = true
+baseURL = "http://minlno.github.io/"
+languageCode = "en-kr"
+title = "김민호의 공부기록장"
+DefaultContentLanguage = "kr"
+enableRobotsTXT = true
+paginate = 10
+pygmentsStyle = "monokai"
 
 [params]
-author = "Minho Kim"
+  description = "A description of my website"
+  author = "Minho Kim"
 
 [taxonomies]
-category = "categories"
-tag = "tags"
+  category = "categories"
+  tag = "tags"
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 1
+  [[menu.main]]
+    name = "Categories"
+    url = "/categories/"
+    weight = 2
+
+[permalinks]
+  posts = "/:year/:month/:day/:slug/"
+
