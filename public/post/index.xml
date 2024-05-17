@@ -20,5 +20,14 @@
       <description>Hello</description>
     </item>
     
+    <item>
+      <title>Hello 2</title>
+      <link>http://minlno.github.io/post/second_post/</link>
+      <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
+      
+      <guid>http://minlno.github.io/post/second_post/</guid>
+      <description>Hello 2</description>
+    </item>
+    
   </channel>
 </rss>
