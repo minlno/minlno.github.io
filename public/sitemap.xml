@@ -1,11 +1,40 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
   <url>
     <loc>http://minlno.github.io/</loc>
-  </url><url>
-    <loc>http://minlno.github.io/categories/</loc>
-  </url><url>
-    <loc>http://minlno.github.io/tags/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
   </url>
+  
+  <url>
+    <loc>http://minlno.github.io/categories/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/categories/gormans-book-translation/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/post/first_post/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/post/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/tags/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://minlno.github.io/tags/virtual-memory/</loc>
+    <lastmod>2024-05-17T02:10:54+09:00</lastmod>
+  </url>
+  
 </urlset>
