@@ -2,18 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on 김민호의 공부기록장</title>
-    <link>http://localhost:1313/categories/</link>
+    <link>http://minlno.github.io/categories/</link>
     <description>Recent content in Categories on 김민호의 공부기록장</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-kr</language>
-    <lastBuildDate>Sat, 18 May 2024 02:10:54 +0900</lastBuildDate>
-    <atom:link href="http://localhost:1313/categories/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 17 May 2024 02:10:54 +0900</lastBuildDate><atom:link href="http://minlno.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Gorman Book Translation</title>
-      <link>http://localhost:1313/categories/gorman-book-translation/</link>
-      <pubDate>Sat, 18 May 2024 02:10:54 +0900</pubDate>
-      <guid>http://localhost:1313/categories/gorman-book-translation/</guid>
+      <link>http://minlno.github.io/categories/gorman-book-translation/</link>
+      <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
+      
+      <guid>http://minlno.github.io/categories/gorman-book-translation/</guid>
       <description></description>
     </item>
+    
   </channel>
 </rss>
