@@ -181,17 +181,34 @@ order를 결정했다면, 두 번째로는 어떤 메모리 노드 또는 pg_dat
 
 ---
 {{< table title="Table 6.6: High Level GFP Flags Affecting Allocator Behaviour" >}}
-| Flag | Low Level Flag Combination |
+| Flag | Description |
 | --- | --- |
-| GFP_ATOMIC |  |
-| GFP_NOIO |  |
-| GFP_NOHIGHIO |  |
-| GFP_NOFS |  |
-| GFP_KERNEL |  |
-| GFP_NFS |  |
-| GFP_USER | |
-| GFP_HIGHUSER |  |
-| GFP_KSWAPD |  |
+| GFP_ATOMIC | 이 플래그는 호출자가 sleep할 수 없고 가능하면 반드시 성공해야하는 상황에 사용된다. 인터럽트 핸들러가 메모리를 필요로 한다면, sleep과 IO 수행을 방지하기 위해 이 플래그를 사용해야한다. buffer_init() 또는 inode_init() 과 같은 많은 서스시스템의 초기화 과정은 이것을 사용한다. |
+| GFP_NOIO | 호출자가 이미 IO와 관련된 작업을 수행중인 경우 이 플래그를 사용한다. 예를 들어, loop back 장치가 buffer head를 위해 페이지를 할당하고자하는 경우, 이것은 추가적인 IO를 야기할 수 있는 일부 동작을 수행하지 않도록 하기위해 이 플래그를 사용해야한다. 사실 이 플래그는 loopback 장치에서의 데드락을 피하기위해 소개되었다. |
+| GFP_NOHIGHIO | 이 플래그는 오로지 alloc_bounce_page()에서 high memory에 IO를 위한 bounce buffer를 생성하는동안 사용된다. |
+| GFP_NOFS | 이것은 오로지 buffer cache와 파일시스템들에 의해서만 사용되며, 그들 스스로를 재귀적으로 호출하지 않도록 하기위해 사용된다. |
+| GFP_KERNEL | 고수준 GFP 플래그들 중에서 가장 자유로운 플래그이다. 이것은 호출자가 무엇이든 허용함을 의미한다. GFP_USER와 오로지 다른 점은 emergency pool을 사용할 수 있다는 점이지만, 2.4.x 커널에서는 이것이 no-op이다. |
+| GFP_USER | 역사적 중요성을 지닌 또 다른 플래그이다. 2.2.x 시리즈에서는, 할당이 LOW, MEDIUM, 또는 HIGH 우선순위를 가졌었다. 만약 메모리가 거의 없다면, GFP_USER(low) 플래그가 설정된 요청은 실패하며, 다른 할당은 계속 시도할 것이다. 이제 이것은 중요하지 않으며, GFP_KERNEL과 구별되지 않는다. |
+| GFP_HIGHUSER | 이 플래그는 할당자가 가능하면 ZONE_HIGHMEM에서 할당해야함을 의미한다. 유저 프로세스 대신 페이지를 할당하는 경우 이것을 사용한다. |
+| GFP_NFS | 이것은 이제 사용하지않는다. 2.0.x 시리즈에서 이 플래그는 예약된 페이지 크기를 결정했었다. 보통은 20개의 free page가 예약되었고, 이 플래그가 설정된 경우, 5개의 페이지만 예약됬었다. |
+| GFP_KSWAPD | 역사적인 의미가 있는 플래그이다. 하지만 더이상 GFP_KERNEL과 구별되지않는다. |
 {{< /table >}}
 
 ---
+
+### 6.4.1 Process Flags
+
+프로세스는 task_struct에도 할당자 동작에 영향을 주는 플래그를 설정할 수 있다. 프로세스 플래그의 전체 리스트는 <linux/sched.h>에 정의되어있다. 이 중 VM 동작에 영향을 주는 플래그들을 Table 6.7에서 확인할 수 있다.
+
+---
+{{< table title="Table 6.7: Process Flags Affecting Allocator behaviour" >}}
+| Flag | Description |
+| --- | --- |
+| PF_MEMALLOC | 프로세스가 메모리 할당자임을 표시한다. **kswapd**와 Out of Memory (OOM, 13장 참조) killer가 kill하기로 결정한 프로세스들에게 이 플래그가 설정된다. 이것은 버디 할당자에게 존 워터마크를 무시하고 가능하다면 최대한 페이지를 할당하도록 한다. |
+| PF_MEMDIE | 이것은 OOM killer에 의해 설정되며, PF_MEMALLOC과 마찬가지로 페이지 할당자에게 프로세스가 곧 죽기 때문에 가능하다면 페이지를 할당하도록 말해준다. |
+| PF_FREE_PAGES | 버디 할당자가 try_to_free_pages()를 호출할 때 자기 자신에게 설정하여, __free_pages_ok()가 해제한 페이지를 free list에 넣는 대신 예약된 상태로 만들도록 지시한다. |
+{{< /table >}}
+
+---
+
+## 6.5 Avoiding Fragmentation

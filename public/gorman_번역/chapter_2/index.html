@@ -44,20 +44,20 @@
 <p>커널에 의해 직접 접근될 수 있는 메모리(ZONE_NORMAL)의 양이 제한적이기 때문에, 리눅스는 2.5절에서 더 자세히 논의될 <strong>High Memory</strong> 라는 개념을 지원한다. 이 장은 노드, 존, 그리고 페이지가 어떻게 표현되는 지 논의하고, 그 다음으로 high memory 관리에 대해 소개할 것이다.</p>
 <h2 id="21-노드">2.1 노드</h2>
 <p>위에서도 언급했듯이, 메모리의 각 노드는 struct pglist_data의 typedef인 pg_data_t로 표현된다. 페이지를 할당할 때, 리눅스는 프로세스가 돌고 있는 CPU에서 가장 가까운 노드로부터 메모리를 할당하기 위해 <strong>node-local allocation policy</strong> 를 사용한다. 프로세스들은 같은 CPU에서 돌고자 하는 경향이 있으므로, 현재 노드의 메모리가 사용될 확률이 높다. 구조체는 다음과 같이 &lt;linux/mmzone.h&gt;에 선언된다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">129</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> pglist_data {
-<span style="color:#ae81ff">130</span>     zone_t node_zones[MAX_NR_ZONES];
-<span style="color:#ae81ff">131</span>     zonelist_t node_zonelists[GFP_ZONEMASK<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>];
-<span style="color:#ae81ff">132</span>     <span style="color:#66d9ef">int</span> nr_zones;
-<span style="color:#ae81ff">133</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>node_mem_map;
-<span style="color:#ae81ff">134</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#f92672">*</span>valid_addr_bitmap;
-<span style="color:#ae81ff">135</span>     <span style="color:#66d9ef">struct</span> bootmem_data <span style="color:#f92672">*</span>bdata;
-<span style="color:#ae81ff">136</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_start_paddr;
-<span style="color:#ae81ff">137</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_start_mapnr;
-<span style="color:#ae81ff">138</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_size;
-<span style="color:#ae81ff">139</span>     <span style="color:#66d9ef">int</span> node_id;
-<span style="color:#ae81ff">140</span>     <span style="color:#66d9ef">struct</span> pglist_data <span style="color:#f92672">*</span>node_next;
-<span style="color:#ae81ff">141</span> } pg_data_t;  
-</code></pre></div><p>각 필드에 대한 간단한 설명은 아래와 같다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">129</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> pglist_data {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">130</span>     <span style="color:#66d9ef">zone_t</span> node_zones[MAX_NR_ZONES];
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">131</span>     <span style="color:#66d9ef">zonelist_t</span> node_zonelists[GFP_ZONEMASK<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">132</span>     <span style="color:#66d9ef">int</span> nr_zones;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">133</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>node_mem_map;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">134</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#f92672">*</span>valid_addr_bitmap;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">135</span>     <span style="color:#66d9ef">struct</span> bootmem_data <span style="color:#f92672">*</span>bdata;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">136</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_start_paddr;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">137</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_start_mapnr;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">138</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> node_size;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">139</span>     <span style="color:#66d9ef">int</span> node_id;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">140</span>     <span style="color:#66d9ef">struct</span> pglist_data <span style="color:#f92672">*</span>node_next;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">141</span> } <span style="color:#66d9ef">pg_data_t</span>;  
+</span></span></code></pre></div><p>각 필드에 대한 간단한 설명은 아래와 같다:</p>
 <ul>
 <li><strong>node_zones</strong>: 이 노드의 존들, ZONE_HIGHMEM, ZONE_NORMAL, ZONE_DMA.</li>
 <li><strong>node_zonelists</strong>: 할당이 선호되는 존의 순서. free_area_init_core()가 호출하는 build_zonelists() 함수에서 순서를 세팅함. ZONE_HIGHMEM에서 실패한 할당 시도는 ZONE_NORMAL 또는 ZONE_DMA로 폴백(fall back)함.</li>
@@ -72,43 +72,43 @@
 <li><strong>node_next</strong>: 다음 노드에 대한 포인터. 다음 노드가 없을 경우 NULL.</li>
 </ul>
 <p>시스템의 모든 노드들은 pgdat_list라고 불리는 리스트로 관리된다. 노드들은 init_bootmem_core() 함수에 의해 초기화될 때 pgdat_list에 삽입되며, 자세한건 5.2.1절에서 다룰 것이다. 2.4.18 버전 이전의 커널에서는, pgdat_list를 순회하는 코드는 다음과 같이 짜여진다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">	pg_data_t <span style="color:#f92672">*</span> pgdat;
-    pgdat <span style="color:#f92672">=</span> pgdat_list;
-    <span style="color:#66d9ef">do</span> {
-    	<span style="color:#75715e">/* do something with pgdata_t */</span>
-        ...
-    } <span style="color:#66d9ef">while</span> ((pgdat <span style="color:#f92672">=</span> pgdat<span style="color:#f92672">-&gt;</span>node_next));
-</code></pre></div><p>더 최근의 커널에서는, for loop처럼 사용할 수 있는 for_each_pgdat()이라는 매크로가 제공되어 코드의 가독성을 높인다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>	<span style="color:#66d9ef">pg_data_t</span> <span style="color:#f92672">*</span> pgdat;
+</span></span><span style="display:flex;"><span>    pgdat <span style="color:#f92672">=</span> pgdat_list;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">do</span> {
+</span></span><span style="display:flex;"><span>    	<span style="color:#75715e">/* do something with pgdata_t */</span>
+</span></span><span style="display:flex;"><span>        ...
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">while</span> ((pgdat <span style="color:#f92672">=</span> pgdat<span style="color:#f92672">-&gt;</span>node_next));
+</span></span></code></pre></div><p>더 최근의 커널에서는, for loop처럼 사용할 수 있는 for_each_pgdat()이라는 매크로가 제공되어 코드의 가독성을 높인다.</p>
 <h2 id="22-zones">2.2 Zones</h2>
 <p>존은 struct zone_struct로 기술되며 대개 이것의 typedef인 zone_t로 참조된다. 이것은 페이지 사용 통계치, free 영역 정보, 그리고 락들에 대한 정보를 유지한다. 이것은 &lt;linux/mmzone.h&gt;에 아래와 같이 선언되어 있다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">37</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> zone_struct {
-<span style="color:#ae81ff">41</span>     spinlock_t        lock;
-<span style="color:#ae81ff">42</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     free_pages;
-<span style="color:#ae81ff">43</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     pages_min, pages_low, pages_high;
-<span style="color:#ae81ff">44</span>     <span style="color:#66d9ef">int</span>               need_balance;
-<span style="color:#ae81ff">45</span> 
-<span style="color:#ae81ff">49</span>     free_area_t       free_area[MAX_ORDER];
-<span style="color:#ae81ff">50</span> 
-<span style="color:#ae81ff">76</span>     wait_queue_head_t <span style="color:#f92672">*</span> wait_table;
-<span style="color:#ae81ff">77</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     wait_table_size;
-<span style="color:#ae81ff">78</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     wait_table_shift;
-<span style="color:#ae81ff">79</span> 
-<span style="color:#ae81ff">83</span>     <span style="color:#66d9ef">struct</span> pglist_data <span style="color:#f92672">*</span>zone_pgdat;
-<span style="color:#ae81ff">84</span>     <span style="color:#66d9ef">struct</span> page        <span style="color:#f92672">*</span>zone_mem_map;
-<span style="color:#ae81ff">85</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>      zone_start_paddr;
-<span style="color:#ae81ff">86</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>      zone_start_mapnr;
-<span style="color:#ae81ff">87</span> 
-<span style="color:#ae81ff">91</span>     <span style="color:#66d9ef">char</span>               <span style="color:#f92672">*</span>name;
-<span style="color:#ae81ff">92</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>      size;
-<span style="color:#ae81ff">93</span> } zone_t;
-</code></pre></div><p>각 필드에 대한 간단한 설명은 아래와 같다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">37</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> zone_struct {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">41</span>     <span style="color:#66d9ef">spinlock_t</span>        lock;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">42</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     free_pages;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">43</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     pages_min, pages_low, pages_high;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">44</span>     <span style="color:#66d9ef">int</span>               need_balance;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">45</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">49</span>     <span style="color:#66d9ef">free_area_t</span>       free_area[MAX_ORDER];
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">50</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">76</span>     <span style="color:#66d9ef">wait_queue_head_t</span> <span style="color:#f92672">*</span> wait_table;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">77</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     wait_table_size;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">78</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>     wait_table_shift;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">79</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">83</span>     <span style="color:#66d9ef">struct</span> pglist_data <span style="color:#f92672">*</span>zone_pgdat;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">84</span>     <span style="color:#66d9ef">struct</span> page        <span style="color:#f92672">*</span>zone_mem_map;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">85</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>      zone_start_paddr;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">86</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>      zone_start_mapnr;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">87</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">91</span>     <span style="color:#66d9ef">char</span>               <span style="color:#f92672">*</span>name;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">92</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>      size;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">93</span> } <span style="color:#66d9ef">zone_t</span>;
+</span></span></code></pre></div><p>각 필드에 대한 간단한 설명은 아래와 같다:</p>
 <ul>
 <li><strong>lock</strong>: 존에 대한 동시 접근을 보호하기위한 spinlock.</li>
 <li><strong>free_pages</strong>: 존의 free page 개수.</li>
 <li><strong>pages_min, pages_low, pages_high</strong>: 다음 절에서 설명될 존 워터마크 값</li>
 <li><strong>need_balance</strong>: kswapd에게 존을 balance하라고 말해주는 flag. 존의 free page 개수가 존 워터마크 값 중 하나에 닿을 경우, balance가 필요하다고 얘기함. 워터마크는 다음 절에서 다룸.</li>
 <li><strong>free_area</strong>: 버디할당자가 사용하는 free area 비트맵.</li>
-<li><strong>wait_table</strong>: 페이지가 해제될 때까지 대기하는 프로세스들의 대기 큐의 해시 테이블임. 이는 wait_on_page()와 unlock_page()에 중요함. 모든 프로세스가 하나의 큐에서 대기할 수는 있지만, 이렇게 하면 깨어난 후에도 여전히 잠긴 페이지를 두고 모든 대기 프로세스가 경쟁을 벌이게 됨. 이렇게 공유 자원을 두고 많은 프로세스가 경쟁하는 상황을 때때로 &lsquo;thundering herd&rsquo;라고 함. wait table은 2.2.3절에서 다룸.</li>
+<li><strong>wait_table</strong>: 페이지가 해제될 때까지 대기하는 프로세스들의 대기 큐의 해시 테이블임. 이는 wait_on_page()와 unlock_page()에 중요함. 모든 프로세스가 하나의 큐에서 대기할 수는 있지만, 이렇게 하면 깨어난 후에도 여전히 잠긴 페이지를 두고 모든 대기 프로세스가 경쟁을 벌이게 됨. 이렇게 공유 자원을 두고 많은 프로세스가 경쟁하는 상황을 때때로 &rsquo;thundering herd&rsquo;라고 함. wait table은 2.2.3절에서 다룸.</li>
 <li><strong>wait_table_size</strong>: 2의 거듭제곱인 해시 테이블의 큐 수.</li>
 <li><strong>wait_table_shift</strong>: long의 비트 수에서 wait_table_size에 대한 이진 로그를 뺀 값으로 정의됨.</li>
 <li><strong>zone_pgdat</strong>: 부모 pg_data_t를 가리키는 포인터.</li>
@@ -154,7 +154,7 @@
 <p>min_low_pfn, max_low_pfn, 그리고 max_pfn, 이 세가지 변수를 통해 high memory의 시작과 끝은 쉽게 계산할 수 있으며, 이 값은 highstart_pfn과 highend_pfn으로 arch/i386/mm/init.c에 file scope 변수로 저장되어있다. 이 값들은 추후에 물리 메모리 할당자를 위해 high memory page를 초기화하는데에 사용되며, 자세한건 5.5절에서 다루게될 것이다.</p>
 <h3 id="223-zone-wait-queue-table">2.2.3 Zone Wait Queue Table</h3>
 <p>page에 대한 IO가 수행되고 있는 경우, 예를 들어 page-in 또는 page-out이 발생하면, 일관적이지 못한 데이터에 대한 접근을 막기 위해 해당 page는 락이 걸린다. 해당 page에 접근하려는 프로세스들은 접근하기 전에 우선 wait_on_page()를 호출하여 wait queue에서 대기해야한다. IO가 완료되고나면, page는 UnlockPage()를 통해 락이 해제될 것이고 queue에서 대기중인 모든 프로세스가 깨어날 것이다. 각 page가 wait queue를 가지도록 구현할 수도 있지만, 이는 너무나 많은 별도의 queue를 저장해야하므로 메모리 관점에서 굉장히 비싸다. 그래서 그 대신에 wait queue는 zone_t에 구현된다.</p>
-<p>zone에 단 하나의 wait queue만을 구현하는 방식도 가능하겠지만, 이는 zone의 아무 page에 대해 기다리고 있던 모든 프로세스들이 어떤 한 page가 unlock될 때 깨어난다는 것을 의미한다. 즉, 이는 심각한 &lsquo;thundering herd&rsquo; 문제를 야기한다. 이렇게 구현하는 대신, wait queue들의 해시테이블이 zone_t-&gt;wait_table에 저장된다. 해시 충돌이 발생하면 프로세스들이 여전히 불필요하게 깨어나게 되겠지만, 충돌은 그렇게 자주 발생하지는 않는다.</p>
+<p>zone에 단 하나의 wait queue만을 구현하는 방식도 가능하겠지만, 이는 zone의 아무 page에 대해 기다리고 있던 모든 프로세스들이 어떤 한 page가 unlock될 때 깨어난다는 것을 의미한다. 즉, 이는 심각한 &rsquo;thundering herd&rsquo; 문제를 야기한다. 이렇게 구현하는 대신, wait queue들의 해시테이블이 zone_t-&gt;wait_table에 저장된다. 해시 충돌이 발생하면 프로세스들이 여전히 불필요하게 깨어나게 되겠지만, 충돌은 그렇게 자주 발생하지는 않는다.</p>
 <p>
   <figure>
     <img src="https://velog.velcdn.com/images/minlno/post/9edc4e43-6c73-471d-adfb-03757e3a9803/image.png" alt="Figure 2.4">
@@ -190,22 +190,22 @@
 <p>NUMA 아키텍처는 해당 노드의 메모리에 lmem_map을 위한 메모리를 할당한다. global mem_map은 절대 명시적으로 할당되지 않으며, 대신 PAGE_OFFSET에 설정되어 가상 배열로 다루어진다. local map의 주소는 pg_data_t-&gt;node_mem_map에 저장되며, 동시에 가상배열인 mem_map의 어딘가에 존재한다. 노드에 존재하는 각 존의 zone_t-&gt;zone_mem_map에는 가상 배열 mem_map에서 존에 해당하는 주소가 저장된다. 이후의 다른 모든 코드에서는 mem_map을 실제 배열처럼 접근하는데, 이는 각 노드가 실제로 유효한 영역만 접근할 것이기 때문이다.</p>
 <h2 id="24-pages">2.4 Pages</h2>
 <p>시스템의 모든 물리 페이지 프레임은 상태를 추적하기 위해 사용되는 자신만의 <strong>struct page</strong>를 가지고 있다. 2.2버전의 커널에서는, 이 구조체가 System V의 그것과 유사했지만 다른 UNIX variants와 마찬가지로 상당히 변화했다. 이것은 &lt;linux/mm.h&gt;에 다음과 같이 선언되어있다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">152</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> page {
-<span style="color:#ae81ff">153</span>     <span style="color:#66d9ef">struct</span> list_head list;
-<span style="color:#ae81ff">154</span>     <span style="color:#66d9ef">struct</span> address_space <span style="color:#f92672">*</span>mapping;
-<span style="color:#ae81ff">155</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> index;
-<span style="color:#ae81ff">156</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>next_hash;
-<span style="color:#ae81ff">158</span>     atomic_t count;
-<span style="color:#ae81ff">159</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> flags;
-<span style="color:#ae81ff">161</span>     <span style="color:#66d9ef">struct</span> list_head lru;
-<span style="color:#ae81ff">163</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">**</span>pprev_hash;
-<span style="color:#ae81ff">164</span>     <span style="color:#66d9ef">struct</span> buffer_head <span style="color:#f92672">*</span> buffers;
-<span style="color:#ae81ff">175</span>
-<span style="color:#ae81ff">176</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#66d9ef">if</span> defined(CONFIG_HIGHMEM) <span style="color:#f92672">||</span> defined(WANT_PAGE_VIRTUAL)
-<span style="color:#ae81ff">177</span>     <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>virtual;
-<span style="color:#ae81ff">179</span> <span style="color:#960050;background-color:#1e0010">#</span>endif <span style="color:#75715e">/* CONFIG_HIGMEM || WANT_PAGE_VIRTUAL */</span>
-<span style="color:#ae81ff">180</span> } mem_map_t;
-</code></pre></div><p>각 변수에 대한 간략한 설명이다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">152</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> page {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">153</span>     <span style="color:#66d9ef">struct</span> list_head list;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">154</span>     <span style="color:#66d9ef">struct</span> address_space <span style="color:#f92672">*</span>mapping;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">155</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> index;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">156</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">*</span>next_hash;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">158</span>     <span style="color:#66d9ef">atomic_t</span> count;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">159</span>     <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> flags;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">161</span>     <span style="color:#66d9ef">struct</span> list_head lru;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">163</span>     <span style="color:#66d9ef">struct</span> page <span style="color:#f92672">**</span>pprev_hash;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">164</span>     <span style="color:#66d9ef">struct</span> buffer_head <span style="color:#f92672">*</span> buffers;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">175</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">176</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">defined</span>(CONFIG_HIGHMEM) <span style="color:#f92672">||</span> <span style="color:#a6e22e">defined</span>(WANT_PAGE_VIRTUAL)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">177</span>     <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>virtual;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">179</span> <span style="color:#960050;background-color:#1e0010">#</span>endif <span style="color:#75715e">/* CONFIG_HIGMEM || WANT_PAGE_VIRTUAL */</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">180</span> } <span style="color:#66d9ef">mem_map_t</span>;
+</span></span></code></pre></div><p>각 변수에 대한 간략한 설명이다:</p>
 <ul>
 <li><strong>list</strong>: 페이지들은 많은 리스트들에 속할 것이고 이 변수는 list head로 사용된다. 예를 들어, 매핑이 있는 페이지들은 address_space에 의해 유지되는 3개의 circular linked list주에 하나에 속할 것이다. 3개의 리스트는 각각 clean_pages, dirty_pages, 그리고 locked_pages이다. slab allocator에서 이 필드는 페이지가 속한 slab과 cache에 대한 포인터를 저장하는 데 쓰인다. 이는 또한 free 페이지들을 묶어서 관리하는 데에도 쓰인다.</li>
 <li><strong>mapping</strong>: 파일이나 장치가 메모리 매핑된 경우, 그들의 inode는 관련된 address_space를 가진다. 페이지가 파일에 속한 경우 이 필드는 address_space의 주소를 저장할 것이다. 만약 페이지가 anonymous이고 mapping이 설정된 경우, address_space는 swap address space를 관리하는 변수인 swapper_space이다.</li>
@@ -235,8 +235,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-471329568">
-  <table class="table " id="471329568" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-471329568" itemprop="about">Table 2.1: Flags Describing Page Status</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-369185724">
+  <table class="table " id="369185724" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-369185724" itemprop="about">Table 2.1: Flags Describing Page Status</caption>
 <thead>
 <tr>
 <th><strong>Bit name</strong></th>
@@ -325,8 +325,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-135846972">
-  <table class="table " id="135846972" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-135846972" itemprop="about">Table 2.2: Macros For Testing, Setting and Clearing page→flags Status Bits</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-476283159">
+  <table class="table " id="476283159" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-476283159" itemprop="about">Table 2.2: Macros For Testing, Setting and Clearing page→flags Status Bits</caption>
 <thead>
 <tr>
 <th><strong>Bit name</strong></th>
@@ -433,13 +433,13 @@
 
 <h3 id="241-mapping-pages-to-zones">2.4.1 Mapping Pages to Zones</h3>
 <p>2.4.18 커널 버전까지는, struct page가 page-&gt;zone을 통해 자신이 속한 존에 대한 참조를 저장했다. 그러나 struct page 구조체는 수천개가 존재하기 때문에 이 작은 포인터 하나가 엄청난 양의 메모리를 차지하게 되므로 낭비라고 여겨졌다. 더 최근의 커널에서는, zone 필드가 사라졌고 대신에 page-&gt;flags의 ZONE_SHIFT개의 top bit가 page가 속한 zone을 결정하는데 사용된다. 첫번째로 zone들의 zone_table이 초기화된다. 이는 mm/page_alloc.c에 선언된다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">33</span> zone_t <span style="color:#f92672">*</span>zone_table[MAX_NR_ZONES<span style="color:#f92672">*</span>MAX_NR_NODES];
-<span style="color:#ae81ff">34</span> <span style="color:#a6e22e">EXPORT_SYMBOL</span>(zone_table);
-</code></pre></div><p>MAX_NR_ZONES는 노드에 존재할 수 있는 최대 존의 개수이다. MAX_NR_NODES는 존재할 수 있는 최대 노드 수이다. EXPORT_SYMBOL()은 zone_table이 커널 모듈에 의해 접근될 수 있도록 해준다. 이 테이블은 다차원 배열처럼 다뤄진다. free_area_init_core() 동안, 노드의 모든 페이지들이 초기화된다. 먼저 이는 table의 값을 설정한다.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">733</span>           zone_table[nid <span style="color:#f92672">*</span> MAX_NR_ZONES <span style="color:#f92672">+</span> j] <span style="color:#f92672">=</span> zone;
-</code></pre></div><p>nid는 노드 ID이고, j는 zone index이며, zone은 zone_t 구조체이다. 각 페이지마다 set_page_zone()이 다음과 같이 호출된다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">788</span>           <span style="color:#a6e22e">set_page_zone</span>(page, nid <span style="color:#f92672">*</span> MAX_NR_ZONES <span style="color:#f92672">+</span> j);
-</code></pre></div><p>인자값 page는 세팅되고있는 존의 page이다. 이때, zone_table의 인덱스가 page에 저장된다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">33</span> <span style="color:#66d9ef">zone_t</span> <span style="color:#f92672">*</span>zone_table[MAX_NR_ZONES<span style="color:#f92672">*</span>MAX_NR_NODES];
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">34</span> <span style="color:#a6e22e">EXPORT_SYMBOL</span>(zone_table);
+</span></span></code></pre></div><p>MAX_NR_ZONES는 노드에 존재할 수 있는 최대 존의 개수이다. MAX_NR_NODES는 존재할 수 있는 최대 노드 수이다. EXPORT_SYMBOL()은 zone_table이 커널 모듈에 의해 접근될 수 있도록 해준다. 이 테이블은 다차원 배열처럼 다뤄진다. free_area_init_core() 동안, 노드의 모든 페이지들이 초기화된다. 먼저 이는 table의 값을 설정한다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">733</span>           zone_table[nid <span style="color:#f92672">*</span> MAX_NR_ZONES <span style="color:#f92672">+</span> j] <span style="color:#f92672">=</span> zone;
+</span></span></code></pre></div><p>nid는 노드 ID이고, j는 zone index이며, zone은 zone_t 구조체이다. 각 페이지마다 set_page_zone()이 다음과 같이 호출된다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">788</span>           <span style="color:#a6e22e">set_page_zone</span>(page, nid <span style="color:#f92672">*</span> MAX_NR_ZONES <span style="color:#f92672">+</span> j);
+</span></span></code></pre></div><p>인자값 page는 세팅되고있는 존의 page이다. 이때, zone_table의 인덱스가 page에 저장된다.</p>
 <h2 id="25-high-memory">2.5 High Memory</h2>
 <p>커널에 의해 사용될 수 있는 주소공간(ZONE_NORMAL)의 크기가 제한적이기 때문에, 커널은 High Memory의 개념을 지원한다. 32비트 x86 시스템에서 high memory에는 4GiB와 64GiB, 두 개의 임계값이 존재한다. 4GiB limit은 32 비트 물리 주소를 통해 접근될 수 있는 메모리 양과 관계가 있다. 1GiB에서 4GiB 사이의 메모리에 접근하기위해서, 커널은 high memory의 페이지를 kmap()을 통해 임시적으로 ZONE_NORMAL에 매핑한다. 이는 9장에서 더 논의한다.</p>
 <p>두번째 limit인 64GiB는 Physical Address Extension(PAE, 32비트 시스템에서 더 많은 RAM을 사용할 수 있도록 고안된 intel의 기술)과 관련이 있다. 이는 4개의 추가 비트가 메모리 주소에 사용될 수 있도록하며, 이를 통해 2^36 바이트 (64GiB)까지의 메모리가 접근될 수 있도록한다.</p>
