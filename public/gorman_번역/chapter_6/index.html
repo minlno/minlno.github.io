@@ -39,19 +39,19 @@
 <hr>
 <p>그러므로, 배열의 0번째 요소는 2^0, 즉 1개의 페이지로 구성된 free 페이지 블록의 리스트를 가리킬 것이며, 1번째는 2^1(=2)개의 페이지를, MAX_ORDER-1 번째는 2^(MAX_ORDER-1)개의 페이지들의 리스트를 가리킬 것이다 (MAX_ORDER는 현재에는 10으로 정의되어있다). 이는 작은 블록이 충분함에도 큰 블록을 쪼개는 상황이 발생할 확률을 제거한다. 페이지 블록들은 page-&gt;list를 통해 linear linked list로 관리된다</p>
 <p>각 존은 free_area_t 구조체의 배열인 free_area[MAX_ORDER]을 가진다. 이는 &lt;linux/mm.h&gt;에 다음과 같이 선언된다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">22</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> free_area_struct {
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">23</span>         <span style="color:#66d9ef">struct</span> list_head        free_list;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">24</span>         <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>           <span style="color:#f92672">*</span>map;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">25</span> } <span style="color:#66d9ef">free_area_t</span>; 
-</span></span></code></pre></div><p>각 필드의 의미는 다음과 같다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">22</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> free_area_struct {
+<span style="color:#ae81ff">23</span>         <span style="color:#66d9ef">struct</span> list_head        free_list;
+<span style="color:#ae81ff">24</span>         <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>           <span style="color:#f92672">*</span>map;
+<span style="color:#ae81ff">25</span> } free_area_t; 
+</code></pre></div><p>각 필드의 의미는 다음과 같다:</p>
 <ul>
 <li>free_list: free page block의 linked list이다.</li>
 <li>map: 버디 쌍의 상태를 표현하는 비트맵이다.</li>
 </ul>
 <p>리눅스는 각 버디 쌍마다 두 비트 대신 하나의 비트만 사용함으로써 메모리를 절약한다. 버디가 할당되거나 해제될 때마다, 버디 쌍에 해당하는 비트가 전환되는데, 버디가 모두 free하거나 할당된 경우 0으로 설정되고, 둘 중 하나만 할당된 경우에 1로 설정된다. 비트의 전환은 page_alloc.c에 존재하는 MARK_USED() 매크로가 수행하며, 이는 다음과 같이 선언되어있다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">164</span> <span style="color:#960050;background-color:#1e0010">#</span>define <span style="color:#a6e22e">MARK_USED</span>(index, order, area) \
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">165</span>         <span style="color:#a6e22e">__change_bit</span>((index) <span style="color:#f92672">&gt;&gt;</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">+</span>(order)), (area)<span style="color:#f92672">-&gt;</span>map)
-</span></span></code></pre></div><p>Index는 페이지의 전역 mem_map 배열 내에서의 위치를 의미한다. 이것을 오른쪽으로 1+order 만큼 쉬프트하면, 배열 내에서 버디쌍의 위치를 계산할 수 있다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">164</span> <span style="color:#960050;background-color:#1e0010">#</span>define MARK_USED(index, order, area) \
+<span style="color:#ae81ff">165</span>         __change_bit((index) <span style="color:#f92672">&gt;&gt;</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">+</span>(order)), (area)<span style="color:#f92672">-&gt;</span>map)
+</code></pre></div><p>Index는 페이지의 전역 mem_map 배열 내에서의 위치를 의미한다. 이것을 오른쪽으로 1+order 만큼 쉬프트하면, 배열 내에서 버디쌍의 위치를 계산할 수 있다.</p>
 <h2 id="62-allocating-pages">6.2 Allocating Pages</h2>
 <p>리눅스는 페이지 프레임의 할당을 위해 꽤 많은 API들을 제공한다. 그들은 모두 gfp_mask를 인자로 받는데, 이는 할당자가 어떻게 동작할 지를 결정하기 위한 플래그들의 집합이다. 플래그들은 섹션 6.4에서 설명한다.</p>
 <p>할당 API들은 모두 핵심 함수인 __alloc_pages()를 사용하지만, 정확한 노드와 존을 선택하기 위해 API가 존재한다. 유저는 서로 다른 존을 필요로 할 것이다. 예를 들면, 장치 드라이버는 ZONE_DMA를 요구할 것이고, 디스크 버퍼는 ZONE_NORMAL을 요구할 것이다. 또한 호출자는 어떤 노드가 사용되는 지에 대해 알 필요는 없을 것이다. 페이지 할당 API의 전체 리스트는 Table 6.1에서 확인할 수 있다.</p>
@@ -72,8 +72,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-249315867">
-  <table class="table " id="249315867" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-249315867" itemprop="about">Table 6.1: Physical Pages Allocation API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-381947265">
+  <table class="table " id="381947265" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-381947265" itemprop="about">Table 6.1: Physical Pages Allocation API</caption>
 <thead>
 <tr>
 <th></th>
@@ -164,8 +164,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-216479583">
-  <table class="table " id="216479583" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-216479583" itemprop="about">Table 6.2: Physical Pages Free API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-786219435">
+  <table class="table " id="786219435" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-786219435" itemprop="about">Table 6.2: Physical Pages Free API</caption>
 <thead>
 <tr>
 <th></th>
@@ -209,12 +209,12 @@
 <p>버디가 해제될 때, 리눅스는 버디 쌍을 가능하다면 즉시 병합하고자 시도한다. 최악의 경우에는 합쳐진 많은 버디들이 즉시 쪼개질 수 있기 때문에, 이러한 정책이 최적은 아니다.</p>
 <p>버디들을 병합할 수 있는지를 판단하기위해, 리눅스는 free_area-&gt;map에서 버디 쌍에 해당하는 비트를 확인한다. 이 함수에 의해 하나의 버디가 해제된 상태기 때문에, 최소 하나의 버디가 free하다는 것은 명백히 알 수 있다. 만약 map의 비트가 0이라면, 우리는 다른 버디또한 free하다는 것을 알 수 있다. map의 비트가 0이라면 두 버디가 모두 할당되었거나 해제되었다는 것을 의미하기 때문이다. 따라서 비트가 0이면, 버디를 병합할 수 있다.</p>
 <p>버디의 주소를 계산하는 방법은 잘 알려져있는 개념이다. 할당이 항상 2의 거듭제곱의 크기로 이루어지기 때문에, 블록의 주소 또는 최소한 이것의 zone_mem_map에서의 offset도 2의 거듭제곱의 배수가 될 것이다. 최종 결과로 주소 비트의 오른쪽에는 항상 최소 k개의 0이 존재할 것이다. 버디의 주소를 얻기 위해서, 오른쪽에서 k번째의 비트가 검사된다. 만약 0이라면, 버디는 해당 비트가 1일 것이다. 이 비트를 얻기위해 리눅스는 mask를 다음과 같이 계산한다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  mask <span style="color:#f92672">=</span> (<span style="color:#ae81ff">0</span> <span style="color:#f92672">&lt;&lt;</span> k)
-</span></span></code></pre></div><p>우리가 관심있는 mask는 다음과 같다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  imask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
-</span></span></code></pre></div><p>리눅스는 이를 다음과 같이 이를 간단히 계산한다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  imask <span style="color:#f92672">=</span> <span style="color:#f92672">-</span>mask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
-</span></span></code></pre></div><p>버디가 병합되고나면, 기존의 free list에서 제거되고 새로 생긴 블록에 대해 다음 order로 넘어가 다시 병합될 수 있는 지를 확인하게된다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">  mask <span style="color:#f92672">=</span> (<span style="color:#ae81ff">0</span> <span style="color:#f92672">&lt;&lt;</span> k)
+</code></pre></div><p>우리가 관심있는 mask는 다음과 같다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">  imask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
+</code></pre></div><p>리눅스는 이를 다음과 같이 이를 간단히 계산한다:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">  imask <span style="color:#f92672">=</span> <span style="color:#f92672">-</span>mask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
+</code></pre></div><p>버디가 병합되고나면, 기존의 free list에서 제거되고 새로 생긴 블록에 대해 다음 order로 넘어가 다시 병합될 수 있는 지를 확인하게된다.</p>
 <h2 id="64-get-free-page-gfp-flags">6.4 Get Free Page (GFP) Flags</h2>
 <p>전체 VM에 대해 항상 적용되는 개념은 Get Free Page (GFP) flag이다. 이 플래그들은 할당자와 <strong>kswapd</strong>가 페이지를 할당 또는 해제할 때 어떻게 동작할 지를 결정한다. 예를 들어, __GFP_WAIT 플래그는 호출자가 sleep 상태를 허용한다는 것을 의미하기 때문에, 인터럽트 핸들러는 이를 설정하지 않을 것이다. 세 집합의 GFP 플래그가 있으며, 이들은 모두 &lt;linux/mm.h&gt;에 정의되어있다.</p>
 <p>셋 중 첫 번째는 zone modifiers이며 Table 6.3에 나와있다. 이 플래그들은 호출자가 특정 존에서 할당을 시도해야한다는 것을 나타낸다. 눈치빠른 독자들은 ZONE_NORMAL을 위한 플래그가 없다는 것을 알아챘을 것이다. 이는 해당 플래그들이 배열의 오프셋으로 사용되며, 0인 경우에는 암시적으로 ZONE_NORMAL에서의 할당을 의미하기 때문이다.</p>
@@ -235,8 +235,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-958724631">
-  <table class="table " id="958724631" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-958724631" itemprop="about">Table 6.3: Low Level GFP Flags Affecting Zone Allocation</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-478639152">
+  <table class="table " id="478639152" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-478639152" itemprop="about">Table 6.3: Low Level GFP Flags Affecting Zone Allocation</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -280,8 +280,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-647218953">
-  <table class="table " id="647218953" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-647218953" itemprop="about">Table 6.4: Low Level GFP Flags Affecting Affecting Allocator behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-386495712">
+  <table class="table " id="386495712" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-386495712" itemprop="about">Table 6.4: Low Level GFP Flags Affecting Affecting Allocator behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -333,8 +333,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-921543876">
-  <table class="table " id="921543876" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-921543876" itemprop="about">Table 6.5: Low Level GFP Flag Combinations For High Level Use</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-247951386">
+  <table class="table " id="247951386" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-247951386" itemprop="about">Table 6.5: Low Level GFP Flag Combinations For High Level Use</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -401,8 +401,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-165372894">
-  <table class="table " id="165372894" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-165372894" itemprop="about">Table 6.6: High Level GFP Flags Affecting Allocator Behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-976823415">
+  <table class="table " id="976823415" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-976823415" itemprop="about">Table 6.6: High Level GFP Flags Affecting Allocator Behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -471,8 +471,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-417296538">
-  <table class="table " id="417296538" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-417296538" itemprop="about">Table 6.7: Process Flags Affecting Allocator behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-893417625">
+  <table class="table " id="893417625" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-893417625" itemprop="about">Table 6.7: Process Flags Affecting Allocator behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -499,6 +499,33 @@
 
 <hr>
 <h2 id="65-avoiding-fragmentation">6.5 Avoiding Fragmentation</h2>
+<p>내부 및 외부 단편화 문제는 어떤 할당자에서든 고려해야할 중요한 문제이다. 외부 단편화는 원하는 크기보다 작은 블록밖에 없어서 할당을 못하는 문제를 말한다. 내부 단편화는 실제 할당하는 블록 크기보다 작은 메모리를 사용하여 공간을 낭비하는 문제를 말한다. 리눅스에서 크고 연속된 페이지에 대한 할당 요청은 드물기 때문에 외부 단편화는 심각한 문제가 아니며, 대개 vmalloc() (7장 참조)으로 해당 요청을 충분히 수행할 수 있다. free 블록을 order별 리스트로 관리하기 때문에 큰 블록을 불필요하게 쪼갤 필요가 없다.</p>
+<p>내부 단편화는 이진 버디 시스템의 가장 심각한 단 하나의 단점이다. 내부 단편화는 28%의 영역을 낭비할 것으로 기대되지만, 이것이 60%의 영역까지도 낭비할 수도 있다는 것이 보여졌으며, first fit 할당자는 단지 1%만 낭비하는 것과 대비된다. 버디 시스템의 다양한 변형들을 사용하는 것 또한 도움이 별로 되지않는다는 것이 보여졌다. 이 문제를 다루기위해, 리눅스는 slab allocator를 사용하여 페이지를 더 작은 블록들로 조각을 내서 할당에 사용하며, 이는 8장에서 더 자세히 논의한다. 이러한 할당자들의 조합을 통해, 커널은 내부 단편화로 인해 낭비되는 메모리의 양을 최소한으로 유지하도록 보장한다.</p>
+<h2 id="66-whats-new-in-26">6.6 What&rsquo;s New In 2.6</h2>
+<h4 id="allocating-pages">Allocating Pages</h4>
+<p>주목할만한 첫 번째 변화는 겉표면에서만 이루어진 것으로 보인다. alloc_pages() 함수는 원래 &lt;linux/mm.h&gt;에 정의된 함수였으나, 이제는 &lt;linux/gfp.h&gt;에 정의된 매크로이다. 새로운 레이아웃은 여전히 매우 알아보기 쉬우며, 주요 차이점은 미묘하지만 중요하다. 2.4에서는 스케줄링된 CPU를 기반하여 할당할 정확한 노드를 고르기위한 전용 코드가 있었지만, 2.6에서는 NUMA와 UMA 아키텍처간의 이러한 구분이 제거되었다.</p>
+<p>2.6에서, alloc_pages()는 numa_node_id()를 호출하여 현재 실행중인 CPU와 연관된 노드의 논리적 ID를 알아낸다. 이 NID는 _alloc_pages()에게 전달되고, 이 함수는 NID를 인자로 사용하여 NODE_DATA()를 호출한다. UMA 아키텍처에서 이것은 항상 contig_page_data를 반환하지만, NUMA에서는 NODE_DATA()가 NID를 통해 offset 정보를 알 수 있도록하는 배열을 준비한다. 즉, 아키텍처는 CPU ID와 NUMA 메모리 노드간의 매핑을 설정할 책임이 있다. 정책은 2.4와 동일하게 node-local allocation을 따르지만, 구현이 훨씬 더 명확해졌다.</p>
+<h4 id="per-cpu-page-lists">Per-CPU Page Lists</h4>
+<p>페이지 할당에 추가된 가장 중요한 것은 per-cpu lists의 추가이며, 2.6 섹션에서 논의됐었다.</p>
+<p>2.4에서, 페이지 할당은 interrupt safe spinlock을 할당하는 동안 잡고있어야한다. 2.6에서는 페이지들이 buffered_rmqueue()를 통해 struct per_cpu_pageset에서 할당된다. low 워터마크 (per_cpu_pageset-&gt;low)가 도달하지 않았다면, 페이지들을 스핀락을 잡지않고 pageset에서 할당할 수 있다. low 워터마크에 도달하면, 많은 페이지를 interrupt safe spinlock을 잡고 한번에 할당하여 per-cpu list에 추가한 후, 하나를 caller에 반환한다.</p>
+<p>상대적으로 드문 높은 order의 할당은 여전히 interrupt safe spinlock을 잡아야하며 블록을 쪼개는 것과 병합하는 것을 즉시 처리한다. order 0의 할당은 low 워터마크에 도달하기 전까지 쪼개는 것을 미룰 것이고, high 워터마크에 도달하기 전까지 병합하는 것을 미룰 것이다.</p>
+<p>그러나, 엄격히 말해서, 이것은 lazy buddy 알고리즘이 아니다. pageset이 order-0의 할당의 merging delay를 도입하기는 했지만, 이것은 의도된 특징이 아니라 부작용이며, pageset을 비우고 버디들을 병합할 수 있는 이용가능한 method는 없다. 즉, per-cpu와 새로운 accounting 관련하여 많은 양의 코드가 mm/page_alloc.c에 추가되었지만, 버디 알고리즘의 핵심은 여전히 2.4 버전과 동일하다.</p>
+<p>이러한 변화의 영향은 직관적이다. 버디 리스트들을 보호하는 스핀락을 잡아야하는 횟수가 줄어든다. 리눅스에서 높은 order에 대한 할당은 드물기 때문에 이 최적화는 대부분의 경우에 적용된다. 이 변화는 단일 CPU 머신에 대해서는 차이점이 거의 없겠지만, 많은 수의 CPU를 가진 머신에서 그 효과가 드러날 것이다. pageset과 관련된 몇가지 이슈가 존재하지만, 그들은 심각한 문제는 아니다. 첫 번째 문제는 pageset이 order-0 페이지를 캐싱해두고 있기때문에 높은 order의 할당이 실패할 수도 있다는 것이다. 두 번째는 memory가 적고, 현재 CPU의 pageset이 비어있고, 다른 CPU의 pageset이 꽉 차있는 경우, &ldquo;원격&rdquo; pageset의 페이지를 회수하기위한 메커니즘이 없기때문에 order-0 할당이 실패할 수도 있다는 것이다. 마지막 잠재적 문제는 새롭게 해제된 페이지들의 버디쌍이 서로 다른 pageset에 속해있는 경우, 단편화 문제를 야기할 수도 있다는 것이다.</p>
+<h4 id="freeing-pages">Freeing Pages</h4>
+<p>free_hot_page()와 free_cold_page()라는 새로운 free API 함수가 도입되었다. 이것은 해제된 페이지가 per-cpu pageset의 hot 또는 cold 리스트 중 어떤 리스트에 삽입될 지를 결정한다. 그러나, free_cold_page()도 export되고 사용가능함에도 불구하고, 실제로는 누구도 이것을 호출하지 않는다.</p>
+<p>__free_pages()를 통해 해제되었거나 __page_cache_release()를 통해 방출된 page cache로 인해 해제된 order-0 페이지들은 hot list에 삽입되며, 높은 order의 페이지의 경우 __free_pages_ok()를 통해 즉시 해제된다. Order-0는 대개 유저공간과 관련되며 할당과 해제에 쓰이는 가장 흔한 타입이다. 이들을 local CPU에 캐싱하면 대부분의 할당이 order-0이므로, lock contention이 줄어들 것이다.</p>
+<p>결국, 페이지들의 리스트가 free_pages_bulk()로 전달되거나, pageset 리스트가 모든 free 페이지들을 캐싱하게된다. free_pages_bulk() 함수는 페이지 블록 할당의 리스트, 각 블록의 order, 그리고 리스트에서 해제할 블록의 수인 count를 인자로 받는다. 첫 번째는 __free_pages_ok()에 전달된 high order의 free 페이지이다. 이 경우, 페이지 블록은 지정된 순서와 count 1로 연결 리스트에 배치된다. 두 번째 경우는 실행 중인 CPU의 pageset에서 high 워터마크에 도달한 경우이다. 이 경우, pageset이 order 0과 pageset-&gt;batch의 카운트로 전달된다.</p>
+<p>핵심 함수 __free_pages_bulk()에 도달하면, 페이지를 버디 리스트로 해제하는 메커니즘은 버전 2.4와 매우 유사하다.</p>
+<h4 id="gfp-flags">GFP Flags</h4>
+<p>여전히 세 개의 영역만 있기 때문에 zone modifier들은 동일하게 유지되지만, 요청을 만족시키기 위해 VM이 얼마나 열심히 작동할지, 또는 작동하지 않을지에 영향을 미치는 세 개의 새로운 GFP 플래그가 추가되었다. 플래그는 다음과 같다:</p>
+<ul>
+<li>__GFP_NOFAIL: 이 플래그는 할당이 절대 실패하지 않아야 하며 할당자가 무기한으로 할당을 시도해야 한다는 것을 호출자가 나타낼 때 사용된다.</li>
+<li>__GFP_REPEAT: 이 플래그는 요청이 실패할 경우 할당을 반복 시도해야 한다는 것을 호출자가 나타낼 때 사용된다. 현재 구현에서는 __GFP_NOFAIL과 동일하게 동작하지만, 나중에는 일정 시간이 지나면 실패하도록 결정할 수 있다.</li>
+<li>__GFP_NORETRY: 이 플래그는 거의 __GFP_NOFAIL의 반대이다. 할당이 실패할 경우 즉시 반환해야 한다는 것을 나타낸다.</li>
+</ul>
+<p>이 글을 쓰는 시점에서는 많이 사용되지 않지만, 도입된 지 얼마 되지 않아 시간이 지나면 더 많이 사용될 가능성이 높다. 특히 __GFP_REPEAT 플래그는 커널 전반에 이 플래그의 동작을 구현하는 코드 블록이 존재하기 때문에 많이 사용될 가능성이 높다.</p>
+<p>다음으로 도입된 GFP 플래그는 __GFP_COLD라는 할당 수정자로, 이는 per-cpu 리스트에서 cold 페이지가 할당되도록 보장하는 데 사용된다. VM의 관점에서 이 플래그의 유일한 사용자는 주로 IO readahead 시 사용되는 함수 page_cache_alloc_cold()이다. 일반적으로 페이지 할당은 hot 페이지 리스트에서 가져오게 된다.</p>
+<p>마지막 새로운 플래그는 __GFP_NO_GROW이다. 이는 8장에서 논의되는 슬랩 할당자에 의해서만 사용되는 내부 플래그로, SLAB_NO_GROW 플래그와 동일하게 사용된다. 이는 특정 캐시에 대해 새로운 슬랩을 절대 할당해서는 안 되는 경우를 나타내기 위해 사용된다. 실제로 이 GFP 플래그는 현재 메인 커널에서 사용되지 않는 기존 SLAB_NO_GROW 플래그를 보완하기 위해 도입된 것이다.</p>
 
     </div>
 </article>
