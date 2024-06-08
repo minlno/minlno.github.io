@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DW95HBTSYY');
+</script>
+<head>
+    <meta name="naver-site-verification" content="4c6445a7b04a6c35c50158c14558c56cbaf7e361" />
+    <meta name="google-site-verification" content="A8xMgCTEXySoU-Z4CD8qlc0vWEYQyaqK3rWW4EuMeO8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.5">
+    <title>{{ .Title }}</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <main class="content">
+        {{ block "main" . }}{{ end }}
+    </main>
+    <script src="/js/scripts.js"></script>
+</body>
+</html>
+

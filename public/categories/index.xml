@@ -1,40 +1,22 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Categories on Minho Kim</title>
-    <link>https://minlno.github.io/categories/</link>
-    <description>Recent content in Categories on Minho Kim</description>
+    <title>Categories on 김민호의 공부기록장</title>
+    <link>http://minlno.github.io/categories/</link>
+    <description>Recent content in Categories on 김민호의 공부기록장</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en-US</language>
-    <lastBuildDate>Mon, 11 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <language>en-kr</language>
+    <lastBuildDate>Fri, 17 May 2024 02:10:54 +0900</lastBuildDate>
     
-	<atom:link href="https://minlno.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://minlno.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     
-    
-    <item>
-      <title>syntax</title>
-      <link>https://minlno.github.io/categories/syntax/</link>
-      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://minlno.github.io/categories/syntax/</guid>
-      <description></description>
-    </item>
     
     <item>
-      <title>themes</title>
-      <link>https://minlno.github.io/categories/themes/</link>
-      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
+      <title>Gorman Book Translation</title>
+      <link>http://minlno.github.io/categories/gorman-book-translation/</link>
+      <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
       
-      <guid>https://minlno.github.io/categories/themes/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>projects</title>
-      <link>https://minlno.github.io/categories/projects/</link>
-      <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
-      
-      <guid>https://minlno.github.io/categories/projects/</guid>
+      <guid>http://minlno.github.io/categories/gorman-book-translation/</guid>
       <description></description>
     </item>
     

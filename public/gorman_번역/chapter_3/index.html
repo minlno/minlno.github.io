@@ -55,10 +55,10 @@
 
 </p>
 <p>세 값을 계산할 때는 오직 SHIFT 값만이 중요한데, 그 이유는 나머지 두 값은 SHIFT 값을 기반으로 계산되기 때문이다. 예를 들어, x86에서 page level을 위한 세 매크로든 다음과 같다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  <span style="color:#ae81ff">5</span> <span style="color:#960050;background-color:#1e0010">#</span>define PAGE_SHIFT      <span style="color:#ae81ff">12</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">6</span> <span style="color:#960050;background-color:#1e0010">#</span>define <span style="color:#a6e22e">PAGE_SIZE</span>       (<span style="color:#ae81ff">1UL</span> <span style="color:#f92672">&lt;&lt;</span> PAGE_SHIFT)
-</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">7</span> <span style="color:#960050;background-color:#1e0010">#</span>define <span style="color:#a6e22e">PAGE_MASK</span>       (<span style="color:#f92672">~</span>(PAGE_SIZE<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>))
-</span></span></code></pre></div><p>PAGE_SHIFT는 linear address space에서 offset 부분의 비트 수이고, x86에서는 12 비트이다. 페이지의 크기는 위의 코드처럼 2^PAGE_SHIFT로 쉽게 계산할 수 있다. 마지막으로 MASK는 (PAGE_SIZE - 1)으로 계산된 비트에 부정 연산을 취하여 계산한다. 만약 페이지가 페이지 경계만큼 align될 필요가 있다면, PAGE_ALIGH()이 사용된다. 이 매크로는 주소값에 (PAGE_SIZE - 1)만큼 더한 후 PAGE_MASK와 AND를 취하여 page offset 비트를 0으로 만든다.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">  <span style="color:#ae81ff">5</span> <span style="color:#960050;background-color:#1e0010">#</span>define PAGE_SHIFT      <span style="color:#ae81ff">12</span>
+  <span style="color:#ae81ff">6</span> <span style="color:#960050;background-color:#1e0010">#</span>define PAGE_SIZE       (<span style="color:#ae81ff">1UL</span> <span style="color:#f92672">&lt;&lt;</span> PAGE_SHIFT)
+  <span style="color:#ae81ff">7</span> <span style="color:#960050;background-color:#1e0010">#</span>define PAGE_MASK       (<span style="color:#f92672">~</span>(PAGE_SIZE<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>))
+</code></pre></div><p>PAGE_SHIFT는 linear address space에서 offset 부분의 비트 수이고, x86에서는 12 비트이다. 페이지의 크기는 위의 코드처럼 2^PAGE_SHIFT로 쉽게 계산할 수 있다. 마지막으로 MASK는 (PAGE_SIZE - 1)으로 계산된 비트에 부정 연산을 취하여 계산한다. 만약 페이지가 페이지 경계만큼 align될 필요가 있다면, PAGE_ALIGH()이 사용된다. 이 매크로는 주소값에 (PAGE_SIZE - 1)만큼 더한 후 PAGE_MASK와 AND를 취하여 page offset 비트를 0으로 만든다.</p>
 <p>PMD_SHIFT는 테이블의 두번째 레벨에 의해 매핑되는 linear address의 비트 수이다. PMD_SIZE와 PMD_MASK는 페이지 레벨 매크로와 비슷한 방식으로 계산된다.</p>
 <p>PGDIR_SHIFT는 페이지 테이블의 첫번째 레벨에 의해 매핑되는 linear address의 비트 수이다. PGDIR_SIZE와 PGDIR_MASK는 위와 같은 방식으로 계산된다.</p>
 <p>중요한 마지막 세 매크로는 PTRS_PER_x로, 각 페이지 테이블 레벨의 엔트리 개수를 결정한다. PTRS_PER_PGD는 PGD에 속한 포인터 수로, x86 without PAE에서는 1024이다. PTRS_PER_PMD와 PTRS_PER_PTE는 각각 PMT, PTE의 엔트리 수로, x86 without PAE에서 각각 1, 1024이다.</p>
@@ -82,8 +82,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-182459637">
-  <table class="table " id="182459637" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-182459637" itemprop="about">Table 3.1: Page Table Entry Protection and Status Bits</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-143785296">
+  <table class="table " id="143785296" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-143785296" itemprop="about">Table 3.1: Page Table Entry Protection and Status Bits</caption>
 <thead>
 <tr>
 <th><strong>Bit</strong></th>
@@ -117,7 +117,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <p>더 논의할 _PAGE_PROTNONE을 제외하면 이름을 통해 그 의미를 알 수 있다. Pentium III 이전의 아키텍처에서는 reserved 비트였던 이 비트는 Pletium III 또는 그 이상의 x86에서 PAT (Page Attribute Table)이라고 불린다. PAT 비트는 PTE가 참조하는 페이지의 크기를 나타내는 데 사용된다. PGD 엔트리에서 같은 비트를 PSE (Page Size Exception) 비트라고 부르며, 이 비트들은 함께 사용되도록 의도되어졌다.</p>
@@ -132,24 +131,24 @@
 <li>pmd_bad()과 pgd_bad()는 어떤 함수가 인자로 받은 엔트리의 값을 변경하고자하는 경우, 변경전에 엔트리를 체크하기위해 사용된다. 이 매크로들이 1을 반환하는 조건은 아키텍처마다 다르지만, 엔트리의 presetn, accessed 비트가 set 되어있음을 확인하는 것은 꼭 보장해줘야한다.</li>
 </ul>
 <p>VM의 많은 부분에 page table walk 코드가 포함되어있으며, 이를 인지하는 것은 중요하다. 가장 간단한 예시로는 mm/memory.c의 follow_page() 함수가 있다. 다음은 해당 함수에서 page table walk과 관련있는 코드만 발췌한 코드이다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">407</span>         <span style="color:#66d9ef">pgd_t</span> <span style="color:#f92672">*</span>pgd;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">408</span>         <span style="color:#66d9ef">pmd_t</span> <span style="color:#f92672">*</span>pmd;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">409</span>         <span style="color:#66d9ef">pte_t</span> <span style="color:#f92672">*</span>ptep, pte;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">410</span> 
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">411</span>         pgd <span style="color:#f92672">=</span> <span style="color:#a6e22e">pgd_offset</span>(mm, address);
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">412</span>         <span style="color:#a6e22e">if</span> (<span style="color:#a6e22e">pgd_none</span>(<span style="color:#f92672">*</span>pgd) <span style="color:#f92672">||</span> <span style="color:#a6e22e">pgd_bad</span>(<span style="color:#f92672">*</span>pgd))
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">413</span>                 <span style="color:#66d9ef">goto</span> out;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">414</span> 
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">415</span>         pmd <span style="color:#f92672">=</span> <span style="color:#a6e22e">pmd_offset</span>(pgd, address);
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">416</span>         <span style="color:#a6e22e">if</span> (<span style="color:#a6e22e">pmd_none</span>(<span style="color:#f92672">*</span>pmd) <span style="color:#f92672">||</span> <span style="color:#a6e22e">pmd_bad</span>(<span style="color:#f92672">*</span>pmd))
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">417</span>                 <span style="color:#66d9ef">goto</span> out;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">418</span> 
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">419</span>         ptep <span style="color:#f92672">=</span> <span style="color:#a6e22e">pte_offset</span>(pmd, address);
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">420</span>         <span style="color:#a6e22e">if</span> (<span style="color:#f92672">!</span>ptep)
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">421</span>                 <span style="color:#66d9ef">goto</span> out;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">422</span> 
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">423</span>         pte <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>ptep;
-</span></span></code></pre></div><p>3개의 offset 매크로를 사용하여 페이지 테이블을 순회하고, _none()과 _bad() 매크로를 사용하여 valid한 엔트리임을 확인한다.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">407</span>         pgd_t <span style="color:#f92672">*</span>pgd;
+<span style="color:#ae81ff">408</span>         pmd_t <span style="color:#f92672">*</span>pmd;
+<span style="color:#ae81ff">409</span>         pte_t <span style="color:#f92672">*</span>ptep, pte;
+<span style="color:#ae81ff">410</span> 
+<span style="color:#ae81ff">411</span>         pgd <span style="color:#f92672">=</span> pgd_offset(mm, address);
+<span style="color:#ae81ff">412</span>         <span style="color:#a6e22e">if</span> (pgd_none(<span style="color:#f92672">*</span>pgd) <span style="color:#f92672">||</span> pgd_bad(<span style="color:#f92672">*</span>pgd))
+<span style="color:#ae81ff">413</span>                 <span style="color:#66d9ef">goto</span> out;
+<span style="color:#ae81ff">414</span> 
+<span style="color:#ae81ff">415</span>         pmd <span style="color:#f92672">=</span> pmd_offset(pgd, address);
+<span style="color:#ae81ff">416</span>         <span style="color:#a6e22e">if</span> (pmd_none(<span style="color:#f92672">*</span>pmd) <span style="color:#f92672">||</span> pmd_bad(<span style="color:#f92672">*</span>pmd))
+<span style="color:#ae81ff">417</span>                 <span style="color:#66d9ef">goto</span> out;
+<span style="color:#ae81ff">418</span> 
+<span style="color:#ae81ff">419</span>         ptep <span style="color:#f92672">=</span> pte_offset(pmd, address);
+<span style="color:#ae81ff">420</span>         <span style="color:#a6e22e">if</span> (<span style="color:#f92672">!</span>ptep)
+<span style="color:#ae81ff">421</span>                 <span style="color:#66d9ef">goto</span> out;
+<span style="color:#ae81ff">422</span> 
+<span style="color:#ae81ff">423</span>         pte <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>ptep;
+</code></pre></div><p>3개의 offset 매크로를 사용하여 페이지 테이블을 순회하고, _none()과 _bad() 매크로를 사용하여 valid한 엔트리임을 확인한다.</p>
 <p>세번째 종류의 매크로는 엔트리의 권한을 검사 및 업데이트한다. 권한은 유저 프로세스가 특정 페이지에 대해서 무엇을 할 수 있는 지를 결정한다. 예를 들어, 커널 페이지 테이블 엔트리는 유저 프로세스가 절대 읽을 수 없다.</p>
 <ul>
 <li>엔트리의 읽기 권한은 pte_read(), pte_mkread(), 그리고 pte_rdprotect()를 통해 각각 test, set, clear된다.</li>
@@ -194,20 +193,20 @@
 <p>리눅스는 자신의 가상 주소를 물리 주소로, struct page를 페이지의 물리 주소로 빠르게 변환할 수 있어야한다. 리눅스는 mem_map 배열의 가상 및 물리 메모리 상의 위치를 알고 있음으로써 이를 달성한다 (mem_map 배열은 전역 배열로, 시스템의 물리 메모리를 표현하는 모든 struct page에 대한 포인터들을 저장한다). 아키텍처마다 이를 달성하는 방식이 다르므로, 설명의 편의를 위해 x86에 대해서만 다루겠다. 이 절에서는 먼저 물리 주소가 커널 가상 주소로 어떻게 매핑되는 지 설명하고, 이것이 mem_map 배열에 어떤 의미를 가지는 지 논의할 것이다.</p>
 <h3 id="371-mapping-physical-to-virtual-kernel-addresses">3.7.1 Mapping Physical to Virtual Kernel Addresses</h3>
 <p>3.6절에서 보았듯이, 리눅스는 0부터 시작하는 물리 주소를 PAGE_OFFSET(x86의 경우 3GiB)부터 시작하는 가상 주소에 매핑한다. 이는 모든 가상 주소가 단순히 PAGE_OFFSET만큼 뺌으로써 물리 주소로 변환될 수 있음을 의미하며, 이는 정확히 virt_to_phys() 함수가 __pa() 매크로로 하는 일과 동일하다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">/* from &lt;asm-i386/page.h&gt; */</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">132</span> <span style="color:#960050;background-color:#1e0010">#</span>define <span style="color:#a6e22e">__pa</span>(x)                 ((<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>)(x)<span style="color:#f92672">-</span>PAGE_OFFSET)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">/* from &lt;asm-i386/io.h&gt; */</span>
-</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">76</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">inline</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">virt_to_phys</span>(<span style="color:#66d9ef">volatile</span> <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span> address)
-</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">77</span> {
-</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">78</span>         <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">__pa</span>(address);
-</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">79</span> }
-</span></span></code></pre></div><p>반대로 변환하는 작업은 단순히 PAGE_OFFSET을 더하면 되며, 이는 phys_to_virt() 함수가 __va() 매크로를 사용하여 수행한다. 다음으로 우리는 이것이 struct page를 물리 주소로 매핑하는 데 어떤 도움을 주는 지 살펴볼 것이다.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">/* from &lt;asm-i386/page.h&gt; */</span>
+<span style="color:#ae81ff">132</span> <span style="color:#960050;background-color:#1e0010">#</span>define __pa(x)                 ((<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>)(x)<span style="color:#f92672">-</span>PAGE_OFFSET)
+
+<span style="color:#75715e">/* from &lt;asm-i386/io.h&gt; */</span>
+ <span style="color:#ae81ff">76</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">inline</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> virt_to_phys(<span style="color:#66d9ef">volatile</span> <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span> address)
+ <span style="color:#ae81ff">77</span> {
+ <span style="color:#ae81ff">78</span>         <span style="color:#66d9ef">return</span> __pa(address);
+ <span style="color:#ae81ff">79</span> }
+</code></pre></div><p>반대로 변환하는 작업은 단순히 PAGE_OFFSET을 더하면 되며, 이는 phys_to_virt() 함수가 __va() 매크로를 사용하여 수행한다. 다음으로 우리는 이것이 struct page를 물리 주소로 매핑하는 데 어떤 도움을 주는 지 살펴볼 것이다.</p>
 <h3 id="372-mapping-struct-pages--to-physical-addresses">3.7.2 Mapping struct pages  to Physical Addresses</h3>
 <p>3.6.1절에서 보았듯이, 커널 이미지는 물리 주소 1MiB에 위치하여 가상 주소 PAGE_OFFSET + 0x00100000로 변환되며, 8MiB가 이미지를 위해 예약된다. 이 때문에 커널이 사용가능한 메모리가 0xC0800000부터 시작한다고 생각할 수 있지만, 이는 사실이 아니다. 리눅스는 16MiB의 메모리를 ZONE_DMA를 위해 예약하므로, 커널은 0xC1000000부터 메모리를 할당할 수 있다. 이곳에 보통 mem_map 배열이 위치한다. ZONE_DMA 메모리도 여전히 사용될 것이지만, 무조건 필요할 때만 할당된다.</p>
 <p>우리는 물리 주소를 mem_map 배열의 인덱스로 사용하여 struct page로 변환할 수 있다. 물리 주소를 PAGE_SHIFT 비트만큼 right shift를 취하면 PFN을 구할 수 있는데, 이는 또한 mem_map 배열에서의 인덱스로 사용할 수 있다. 이는 정확히 &lt;asm-i386/page.h&gt;의 virt_to_page()가 하는 일이다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#define virt_to_page(kaddr) (mem_map + (__pa(kaddr) &gt;&gt; PAGE_SHIFT))
-</span></span></span></code></pre></div><p>virt_to_page() 매크로는 가상 주소인 kaddr를 인자로 받아, __pa()로 물리주소로 변환하고, 물리 주소를 PAGE_SHIFT 비트만큼 right shift를 취하여 PFN을 구한 다음, PFN을 mem_map의 인덱스로 사용하여 struct page의 주소를 반환한다. struct page를 물리 주소로 변환하는 매크로는 제공되지 않지만, 어떻게 구현할 수 있을 지는 여러분도 생각할 수 있을 것이다. (역자: struct page의 주소에서 mem_map의 주소를 뺀 값이 PFN일 것이다.)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#define virt_to_page(kaddr) (mem_map + (__pa(kaddr) &gt;&gt; PAGE_SHIFT))
+</span></code></pre></div><p>virt_to_page() 매크로는 가상 주소인 kaddr를 인자로 받아, __pa()로 물리주소로 변환하고, 물리 주소를 PAGE_SHIFT 비트만큼 right shift를 취하여 PFN을 구한 다음, PFN을 mem_map의 인덱스로 사용하여 struct page의 주소를 반환한다. struct page를 물리 주소로 변환하는 매크로는 제공되지 않지만, 어떻게 구현할 수 있을 지는 여러분도 생각할 수 있을 것이다. (역자: struct page의 주소에서 mem_map의 주소를 뺀 값이 PFN일 것이다.)</p>
 <h2 id="38-translation-lookaside-buffer-tlb">3.8 Translation Lookaside Buffer (TLB)</h2>
 <p>프로세서가 가상 주소를 물리 주소로 변환하기 위해서는, 원하는 PTE를 찾기 위해 모든 레벨의 페이지 테이블 탐색이 필요하다. 이는 각 명령어들이 메모리를 참조할 때, 실제로는 페이지 테이블 순회를 위한 추가적인 메모리 접근이 발생함을 의미한다. 상당한 오버헤드가 발생하는 것을 막기 위해, 아키텍처들은 대부분의 프로세스들의 reference locality, 즉 대부분의 접근이 소수의 페이지에 해당한다는 특성을 활용한다. 그들은 이 특성을 활용하기 위해, 가상 주소의 변환 자체를 캐싱하는 작은 메모리인 TLB를 제공한다.</p>
 <p>리눅스는 대부분의 아키텍처가 TLB를 지원한다고 가정한다. 그러나, 아키텍처 독립적인 코드는 TLB의 동작을 알 수 없기 때문에, 코드 여기저기서 TLB 관련 동작을 필요로 할때 아키텍처 의존적인 TLB 동작을 수행하는 hook를 사용한다. 예를 들어, page fault가 수행되어 페이지 테이블이 수정된 경우, 프로세서는 변경된 가상 주소 매핑을 TLB에 갱신해줘야 할 수도 있다.</p>
@@ -229,8 +228,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-381254769">
-  <table class="table " id="381254769" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-381254769" itemprop="about">Table 3.2: Translation Lookaside Buffer Flush API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-612934587">
+  <table class="table " id="612934587" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-612934587" itemprop="about">Table 3.2: Translation Lookaside Buffer Flush API</caption>
 <thead>
 <tr>
 <th>함수</th>
@@ -252,7 +251,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 
@@ -271,8 +269,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-269485713">
-  <table class="table " id="269485713" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-269485713" itemprop="about">Table 3.3: Translation Lookaside Buffer Flush API (cont) </caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-249356187">
+  <table class="table " id="249356187" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-249356187" itemprop="about">Table 3.3: Translation Lookaside Buffer Flush API (cont) </caption>
 <thead>
 <tr>
 <th>함수</th>
@@ -294,7 +292,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <h2 id="39-level-1-cpu-cache-management">3.9 Level 1 CPU Cache Management</h2>
@@ -324,8 +321,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-845126379">
-  <table class="table " id="845126379" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-845126379" itemprop="about">Table 3.4: Cache and TLB Flush Ordering</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-524713986">
+  <table class="table " id="524713986" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-524713986" itemprop="about">Table 3.4: Cache and TLB Flush Ordering</caption>
 <thead>
 <tr>
 <th>Flushing Full MM</th>
@@ -351,7 +348,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <p>캐시를 flush하는 데 사용되는 API는 &lt;asm/pgtable.h&gt;에 선언되어 있으며, Table 3.5에 나열되어 있다. 여러 측면에서 이 API는 TLB flush API와 매우 유사하다.</p>
@@ -371,8 +367,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-354612978">
-  <table class="table " id="354612978" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-354612978" itemprop="about">Table 3.5: CPU Cache Flush API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-678592314">
+  <table class="table " id="678592314" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-678592314" itemprop="about">Table 3.5: CPU Cache Flush API</caption>
 <thead>
 <tr>
 <th>함수</th>
@@ -398,7 +394,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <p>여기서 끝이 아니다. virtual aliasing 문제를 피하기 위해서는 추가적인 API들이 필요하다. 캐시라인을 가상 주소 기반으로 매핑하는 경우, 한 물리 주소에 대해서 여러 캐시라인이 존재할 수 있게되는데, 이로 인한 캐시 일관성 문제를 virtual aliasing 문제라고 한다. 이 문제가 있는 아키텍처는 shared mapping이 주소를 임시 조치로만 사용하도록 보장하려고 시도할 수도 있다. 그러나, 이 문제를 다루기 위한 적절한 API 또한 제공되며, Table 3.6에서 확인할 수 있다.</p>
@@ -418,8 +413,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-982576431">
-  <table class="table " id="982576431" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-982576431" itemprop="about">Table 3.6: CPU D-Cache and I-Cache Flush API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-497253861">
+  <table class="table " id="497253861" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-497253861" itemprop="about">Table 3.6: CPU D-Cache and I-Cache Flush API</caption>
 <thead>
 <tr>
 <th>함수</th>
@@ -449,7 +444,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <h2 id="310-whats-new-in-26">3.10 What&rsquo;s New In 2.6</h2>
@@ -479,13 +473,13 @@
 <p>9장에서 얘기하겠지만, high memory에 대한 매핑 정보는 제한적이기 때문에, PTE를 high memory에 옮기는 것은 컴파일 타임 configuration 옵션이다. high memory의 페이지에 접근하기 위해서 커널은 낮은 주소 공간에 이를 매핑해야하는데, 이러한 매핑을 위한 자리가 굉장히 부족하기 때문에 골치아픈 병목현상이 발생한다. 그러나 PTE가 매우 많은 어플리케이션에게는 다른 옵션이 없다. 글을 쓰고있는 시점에, 프로세스마다 private하게 할당되는 커널 주소 공간인 User Kernel Virtual Area (UKVA)가 제안되었지만, 이것이 2.6에 merge될 지는 미지수다.</p>
 <p>High memory 매핑을 고려하기 위해, pte_offset() 매크로는 2.6에서 pte_offset_map()으로 대체된다. 만약 PTE가 low memory에 위치한다면, 이 매크로는 pte_offset()과 동일한 방식으로 PTE의 주소를 반환한다. 만약 PTE가 high memory에 있다면, 먼저 PTE를 kmap_atomic()을 통해 low memory에 매핑하여 커널이 접근할 수 있게 한다. 이 PTE는 최대한 빨리 pte_unmap()을 통해 다시 unmap되어야한다.</p>
 <p>프로그래밍 관점에서 이는 페이지 테이블 워크 코드의 생김새가 약간 달라졌음을 의미한다. 주어진 주소에서 PTE를 찾는 코드는 이제 다음과 같다 (mm/memory.c):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">640</span>         ptep <span style="color:#f92672">=</span> <span style="color:#a6e22e">pte_offset_map</span>(pmd, address);
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">641</span>         <span style="color:#a6e22e">if</span> (<span style="color:#f92672">!</span>ptep)
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">642</span>                 <span style="color:#66d9ef">goto</span> out;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">643</span> 
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">644</span>         pte <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>ptep;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">645</span>         <span style="color:#a6e22e">pte_unmap</span>(ptep);
-</span></span></code></pre></div><p>추가적으로, PTE 할당 API도 바뀌었다. pte_alloc() 대신에, 커널 PTE 매핑은 pte_alloc_kernel()을, 유저 매핑은 pte_alloc_map()을 사용한다. 둘의 차이점은 pte_alloc_kernel()은 절대로 high memory에서 PTE를 할당하지 않는다는 점이다.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">640</span>         ptep <span style="color:#f92672">=</span> pte_offset_map(pmd, address);
+<span style="color:#ae81ff">641</span>         <span style="color:#a6e22e">if</span> (<span style="color:#f92672">!</span>ptep)
+<span style="color:#ae81ff">642</span>                 <span style="color:#66d9ef">goto</span> out;
+<span style="color:#ae81ff">643</span> 
+<span style="color:#ae81ff">644</span>         pte <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>ptep;
+<span style="color:#ae81ff">645</span>         <span style="color:#a6e22e">pte_unmap</span>(ptep);
+</code></pre></div><p>추가적으로, PTE 할당 API도 바뀌었다. pte_alloc() 대신에, 커널 PTE 매핑은 pte_alloc_kernel()을, 유저 매핑은 pte_alloc_map()을 사용한다. 둘의 차이점은 pte_alloc_kernel()은 절대로 high memory에서 PTE를 할당하지 않는다는 점이다.</p>
 <p>메모리 관리 관점에서, high memory에 PTE를 매핑하는 오버헤드는 무시할 수 없다. CPU당 PTE의 매핑은 동시에 한 개만 수행할 수 있다. 비록 두번째 PTE의 매핑은 pte_offset_map_nested()로 수행할 수도 있지만, 이러한 사실은 모든 PTE를 검사해야할 때 큰 오버헤드를 야기한다.</p>
 <p>글을 쓰고있는 현재, 동일한 방식으로 PMD를 high memory에 저장하는 패치가 제출됬고, 이는 아마 merge될 것이다.</p>
 <h4 id="huge-tlb-filesystem">Huge TLB Filesystem</h4>

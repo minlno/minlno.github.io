@@ -41,19 +41,19 @@
 <hr>
 <p>그러므로, 배열의 0번째 요소는 2^0, 즉 1개의 페이지로 구성된 free 페이지 블록의 리스트를 가리킬 것이며, 1번째는 2^1(=2)개의 페이지를, MAX_ORDER-1 번째는 2^(MAX_ORDER-1)개의 페이지들의 리스트를 가리킬 것이다 (MAX_ORDER는 현재에는 10으로 정의되어있다). 이는 작은 블록이 충분함에도 큰 블록을 쪼개는 상황이 발생할 확률을 제거한다. 페이지 블록들은 page-&gt;list를 통해 linear linked list로 관리된다</p>
 <p>각 존은 free_area_t 구조체의 배열인 free_area[MAX_ORDER]을 가진다. 이는 &lt;linux/mm.h&gt;에 다음과 같이 선언된다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">22</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> free_area_struct {
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">23</span>         <span style="color:#66d9ef">struct</span> list_head        free_list;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">24</span>         <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>           <span style="color:#f92672">*</span>map;
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">25</span> } <span style="color:#66d9ef">free_area_t</span>; 
-</span></span></code></pre></div><p>각 필드의 의미는 다음과 같다:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">22</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> free_area_struct {
+<span style="color:#ae81ff">23</span>         <span style="color:#66d9ef">struct</span> list_head        free_list;
+<span style="color:#ae81ff">24</span>         <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>           <span style="color:#f92672">*</span>map;
+<span style="color:#ae81ff">25</span> } free_area_t; 
+</code></pre></div><p>각 필드의 의미는 다음과 같다:</p>
 <ul>
 <li>free_list: free page block의 linked list이다.</li>
 <li>map: 버디 쌍의 상태를 표현하는 비트맵이다.</li>
 </ul>
 <p>리눅스는 각 버디 쌍마다 두 비트 대신 하나의 비트만 사용함으로써 메모리를 절약한다. 버디가 할당되거나 해제될 때마다, 버디 쌍에 해당하는 비트가 전환되는데, 버디가 모두 free하거나 할당된 경우 0으로 설정되고, 둘 중 하나만 할당된 경우에 1로 설정된다. 비트의 전환은 page_alloc.c에 존재하는 MARK_USED() 매크로가 수행하며, 이는 다음과 같이 선언되어있다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">164</span> <span style="color:#960050;background-color:#1e0010">#</span>define <span style="color:#a6e22e">MARK_USED</span>(index, order, area) \
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">165</span>         <span style="color:#a6e22e">__change_bit</span>((index) <span style="color:#f92672">&gt;&gt;</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">+</span>(order)), (area)<span style="color:#f92672">-&gt;</span>map)
-</span></span></code></pre></div><p>Index는 페이지의 전역 mem_map 배열 내에서의 위치를 의미한다. 이것을 오른쪽으로 1+order 만큼 쉬프트하면, 배열 내에서 버디쌍의 위치를 계산할 수 있다.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">164</span> <span style="color:#960050;background-color:#1e0010">#</span>define MARK_USED(index, order, area) <span style="color:#960050;background-color:#1e0010">\</span>
+<span style="color:#ae81ff">165</span>         __change_bit((index) <span style="color:#f92672">&gt;&gt;</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">+</span>(order)), (area)<span style="color:#f92672">-&gt;</span>map)
+</code></pre></div><p>Index는 페이지의 전역 mem_map 배열 내에서의 위치를 의미한다. 이것을 오른쪽으로 1+order 만큼 쉬프트하면, 배열 내에서 버디쌍의 위치를 계산할 수 있다.</p>
 <h2 id="62-allocating-pages">6.2 Allocating Pages</h2>
 <p>리눅스는 페이지 프레임의 할당을 위해 꽤 많은 API들을 제공한다. 그들은 모두 gfp_mask를 인자로 받는데, 이는 할당자가 어떻게 동작할 지를 결정하기 위한 플래그들의 집합이다. 플래그들은 섹션 6.4에서 설명한다.</p>
 <p>할당 API들은 모두 핵심 함수인 __alloc_pages()를 사용하지만, 정확한 노드와 존을 선택하기 위해 API가 존재한다. 유저는 서로 다른 존을 필요로 할 것이다. 예를 들면, 장치 드라이버는 ZONE_DMA를 요구할 것이고, 디스크 버퍼는 ZONE_NORMAL을 요구할 것이다. 또한 호출자는 어떤 노드가 사용되는 지에 대해 알 필요는 없을 것이다. 페이지 할당 API의 전체 리스트는 Table 6.1에서 확인할 수 있다.</p>
@@ -74,8 +74,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-758234619">
-  <table class="table " id="758234619" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-758234619" itemprop="about">Table 6.1: Physical Pages Allocation API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-937124586">
+  <table class="table " id="937124586" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-937124586" itemprop="about">Table 6.1: Physical Pages Allocation API</caption>
 <thead>
 <tr>
 <th></th>
@@ -120,7 +120,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <hr>
@@ -166,8 +165,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-972146853">
-  <table class="table " id="972146853" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-972146853" itemprop="about">Table 6.2: Physical Pages Free API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-819235467">
+  <table class="table " id="819235467" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-819235467" itemprop="about">Table 6.2: Physical Pages Free API</caption>
 <thead>
 <tr>
 <th></th>
@@ -194,7 +193,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <hr>
@@ -211,12 +209,12 @@
 <p>버디가 해제될 때, 리눅스는 버디 쌍을 가능하다면 즉시 병합하고자 시도한다. 최악의 경우에는 합쳐진 많은 버디들이 즉시 쪼개질 수 있기 때문에, 이러한 정책이 최적은 아니다.</p>
 <p>버디들을 병합할 수 있는지를 판단하기위해, 리눅스는 free_area-&gt;map에서 버디 쌍에 해당하는 비트를 확인한다. 이 함수에 의해 하나의 버디가 해제된 상태기 때문에, 최소 하나의 버디가 free하다는 것은 명백히 알 수 있다. 만약 map의 비트가 0이라면, 우리는 다른 버디또한 free하다는 것을 알 수 있다. map의 비트가 0이라면 두 버디가 모두 할당되었거나 해제되었다는 것을 의미하기 때문이다. 따라서 비트가 0이면, 버디를 병합할 수 있다.</p>
 <p>버디의 주소를 계산하는 방법은 잘 알려져있는 개념이다. 할당이 항상 2의 거듭제곱의 크기로 이루어지기 때문에, 블록의 주소 또는 최소한 이것의 zone_mem_map에서의 offset도 2의 거듭제곱의 배수가 될 것이다. 최종 결과로 주소 비트의 오른쪽에는 항상 최소 k개의 0이 존재할 것이다. 버디의 주소를 얻기 위해서, 오른쪽에서 k번째의 비트가 검사된다. 만약 0이라면, 버디는 해당 비트가 1일 것이다. 이 비트를 얻기위해 리눅스는 mask를 다음과 같이 계산한다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  mask <span style="color:#f92672">=</span> (<span style="color:#ae81ff">0</span> <span style="color:#f92672">&lt;&lt;</span> k)
-</span></span></code></pre></div><p>우리가 관심있는 mask는 다음과 같다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  imask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
-</span></span></code></pre></div><p>리눅스는 이를 다음과 같이 이를 간단히 계산한다:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  imask <span style="color:#f92672">=</span> <span style="color:#f92672">-</span>mask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
-</span></span></code></pre></div><p>버디가 병합되고나면, 기존의 free list에서 제거되고 새로 생긴 블록에 대해 다음 order로 넘어가 다시 병합될 수 있는 지를 확인하게된다.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">  mask <span style="color:#f92672">=</span> (<span style="color:#ae81ff">0</span> <span style="color:#f92672">&lt;&lt;</span> k)
+</code></pre></div><p>우리가 관심있는 mask는 다음과 같다:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">  imask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
+</code></pre></div><p>리눅스는 이를 다음과 같이 이를 간단히 계산한다:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">  imask <span style="color:#f92672">=</span> <span style="color:#f92672">-</span>mask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> mask
+</code></pre></div><p>버디가 병합되고나면, 기존의 free list에서 제거되고 새로 생긴 블록에 대해 다음 order로 넘어가 다시 병합될 수 있는 지를 확인하게된다.</p>
 <h2 id="64-get-free-page-gfp-flags">6.4 Get Free Page (GFP) Flags</h2>
 <p>전체 VM에 대해 항상 적용되는 개념은 Get Free Page (GFP) flag이다. 이 플래그들은 할당자와 <strong>kswapd</strong>가 페이지를 할당 또는 해제할 때 어떻게 동작할 지를 결정한다. 예를 들어, __GFP_WAIT 플래그는 호출자가 sleep 상태를 허용한다는 것을 의미하기 때문에, 인터럽트 핸들러는 이를 설정하지 않을 것이다. 세 집합의 GFP 플래그가 있으며, 이들은 모두 &lt;linux/mm.h&gt;에 정의되어있다.</p>
 <p>셋 중 첫 번째는 zone modifiers이며 Table 6.3에 나와있다. 이 플래그들은 호출자가 특정 존에서 할당을 시도해야한다는 것을 나타낸다. 눈치빠른 독자들은 ZONE_NORMAL을 위한 플래그가 없다는 것을 알아챘을 것이다. 이는 해당 플래그들이 배열의 오프셋으로 사용되며, 0인 경우에는 암시적으로 ZONE_NORMAL에서의 할당을 의미하기 때문이다.</p>
@@ -237,8 +235,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-673195248">
-  <table class="table " id="673195248" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-673195248" itemprop="about">Table 6.3: Low Level GFP Flags Affecting Zone Allocation</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-615372984">
+  <table class="table " id="615372984" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-615372984" itemprop="about">Table 6.3: Low Level GFP Flags Affecting Zone Allocation</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -260,7 +258,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <hr>
@@ -282,8 +279,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-364721598">
-  <table class="table " id="364721598" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-364721598" itemprop="about">Table 6.4: Low Level GFP Flags Affecting Affecting Allocator behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-695138274">
+  <table class="table " id="695138274" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-695138274" itemprop="about">Table 6.4: Low Level GFP Flags Affecting Affecting Allocator behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -313,7 +310,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <hr>
@@ -335,8 +331,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-628594173">
-  <table class="table " id="628594173" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-628594173" itemprop="about">Table 6.5: Low Level GFP Flag Combinations For High Level Use</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-351679248">
+  <table class="table " id="351679248" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-351679248" itemprop="about">Table 6.5: Low Level GFP Flag Combinations For High Level Use</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -382,7 +378,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <hr>
@@ -403,8 +398,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-518739264">
-  <table class="table " id="518739264" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-518739264" itemprop="about">Table 6.6: High Level GFP Flags Affecting Allocator Behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-598746231">
+  <table class="table " id="598746231" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-598746231" itemprop="about">Table 6.6: High Level GFP Flags Affecting Allocator Behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -450,7 +445,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <hr>
@@ -473,8 +467,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-512893476">
-  <table class="table " id="512893476" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-512893476" itemprop="about">Table 6.7: Process Flags Affecting Allocator behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-743829165">
+  <table class="table " id="743829165" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-743829165" itemprop="about">Table 6.7: Process Flags Affecting Allocator behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -496,7 +490,6 @@
 </tr>
 </tbody>
 </table>
-
 </div>
 
 <hr>

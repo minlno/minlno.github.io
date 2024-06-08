@@ -7,48 +7,84 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-kr</language>
     <lastBuildDate>Fri, 17 May 2024 02:10:54 +0900</lastBuildDate>
-    <atom:link href="http://minlno.github.io/categories/gorman-book-translation/index.xml" rel="self" type="application/rss+xml" />
+    
+	<atom:link href="http://minlno.github.io/categories/gorman-book-translation/index.xml" rel="self" type="application/rss+xml" />
+    
+    
     <item>
       <title>Chapter 2 Describing Physical Memory</title>
       <link>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_2/</link>
       <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
+      
       <guid>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_2/</guid>
-      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 2를 번역한 글입니다.&#xA;수많은 아키텍처들이 리눅스를 사용하기 때문에, 메모리를 특정 아키텍처와 상관없이 독립적으로 설명할 수 있는 방법이 필요하다. 이 장에서는 메모리 뱅크, 페이지 및 VM(Virtual Memory) 동작에 영향을 미치는 플래그를 설명하는 데 사용되는 구조체에 대해 설명한다.&#xA;VM에서 첫 주요 개념은 Non-Uniform Memory Access(NUMA)이다. 큰 스케일의 머신의 경우, 프로세서로부터의 &amp;lsquo;거리&amp;rsquo;에 따라 접근 비용이 다른 여러 메모리 뱅크로 구성될 수 있다. 예를 들어, 각 CPU에 할당된 메모리 뱅크가 있거나, Device에 가까워서 DMA(Direct Memory Access)를 하기에 매우 적합한 메모리 뱅크가 있을 수 있다.</description>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 2를 번역한 글입니다.
+ 수많은 아키텍처들이 리눅스를 사용하기 때문에, 메모리를 특정 아키텍처와 상관없이 독립적으로 설명할 수 있는 방법이 필요하다. 이 장에서는 메모리 뱅크, 페이지 및 VM(Virtual Memory) 동작에 영향을 미치는 플래그를 설명하는 데 사용되는 구조체에 대해 설명한다.
+VM에서 첫 주요 개념은 Non-Uniform Memory Access(NUMA)이다. 큰 스케일의 머신의 경우, 프로세서로부터의 &amp;lsquo;거리&#39;에 따라 접근 비용이 다른 여러 메모리 뱅크로 구성될 수 있다.</description>
     </item>
+    
     <item>
       <title>Chapter 3 Page Table Management</title>
       <link>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_3/</link>
       <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
+      
       <guid>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_3/</guid>
-      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 3를 번역한 글입니다.&#xA;리눅스는 머신-독립/의존적 계층을 다른 OS들과는 다른 방식으로 나눈다. 다른 OS들은 물리 페이지를 관리하기위한 객체를 가진다 (BSD의 경우 pmap 객체). 리눅스는 대신에 3-level page table의 개념을 아키텍처 독립적인 코드에 도입한다 (심지어 머신의 아키텍처가 이를 지원하지 않더라도 말이다!). 이것은 개념적으로는 이해하기 쉬우나, 서로 다른 페이지들 간의 구분이 흐려지며, 페이지가 속한 객체가 아닌, 페이지의 플래그, 어떤 리스트에 속해있는 지와 같은 간접적인 정보를 통해 페이지의 타입을 구분해야함을 의미한다.</description>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 3를 번역한 글입니다.
+ 리눅스는 머신-독립/의존적 계층을 다른 OS들과는 다른 방식으로 나눈다. 다른 OS들은 물리 페이지를 관리하기위한 객체를 가진다 (BSD의 경우 pmap 객체). 리눅스는 대신에 3-level page table의 개념을 아키텍처 독립적인 코드에 도입한다 (심지어 머신의 아키텍처가 이를 지원하지 않더라도 말이다!). 이것은 개념적으로는 이해하기 쉬우나, 서로 다른 페이지들 간의 구분이 흐려지며, 페이지가 속한 객체가 아닌, 페이지의 플래그, 어떤 리스트에 속해있는 지와 같은 간접적인 정보를 통해 페이지의 타입을 구분해야함을 의미한다.</description>
     </item>
+    
     <item>
       <title>Chapter 4 Process Address Space</title>
       <link>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_4/</link>
       <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
+      
       <guid>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_4/</guid>
-      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 4를 번역한 글입니다.&#xA;가상 메모리의 주요 이점 중 하나는 각각의 프로세스들이 물리 메모리에 매핑되는 자신만의 가상 주소 공간을 가진다는 것이다. 이 장에서 우리는 프로세스의 주소 공간과 리눅스가 이것을 관리하는 방법에 대해 다룰 것이다.&#xA;커널은 주소 공간을 커널 영역과 유저 영역으로 나누어, 서로 매우 다른 방식으로 관리된다. 예를 들어, 커널을 위한 할당은 즉시 수행되며 CPU에 어떤 프로세스가 돌고있는 지 상관없이 global하게 노출된다.</description>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 4를 번역한 글입니다.
+ 가상 메모리의 주요 이점 중 하나는 각각의 프로세스들이 물리 메모리에 매핑되는 자신만의 가상 주소 공간을 가진다는 것이다. 이 장에서 우리는 프로세스의 주소 공간과 리눅스가 이것을 관리하는 방법에 대해 다룰 것이다.
+커널은 주소 공간을 커널 영역과 유저 영역으로 나누어, 서로 매우 다른 방식으로 관리된다. 예를 들어, 커널을 위한 할당은 즉시 수행되며 CPU에 어떤 프로세스가 돌고있는 지 상관없이 global하게 노출된다.</description>
     </item>
+    
     <item>
       <title>Chapter 5 Boot Memory Allocator</title>
       <link>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_5/</link>
       <pubDate>Fri, 17 May 2024 02:10:54 +0900</pubDate>
+      
       <guid>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_5/</guid>
-      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 5를 번역한 글입니다.&#xA;하드웨어 구성의 조합의 수가 매우 많기 때문에, 컴파일 타임에 정적으로 핵심 커널 메모리 자료구조들을 초기화하는 것은 비현실적이다. 그러나 다음 장에서 설명할 물리 페이지 할당자조차도 자기자신을 초기화하기 위해 메모리를 할당해야한다. 그러나 어떻게 물리 페이지 할당자가 자기자신을 위한 메모리를 할당할 수 있겠는가.&#xA;이 문제를 해결하기위해, Boot Memory Allocator라고 불리는 특별한 할당자가 사용된다. 이것은 가장 기초적인 할당 방식인 First Fit 할당에 기반하며, free block의 연결 리스트 대신 비트맵을 사용하여 메모리를 표현한다.</description>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 5를 번역한 글입니다.
+ 하드웨어 구성의 조합의 수가 매우 많기 때문에, 컴파일 타임에 정적으로 핵심 커널 메모리 자료구조들을 초기화하는 것은 비현실적이다. 그러나 다음 장에서 설명할 물리 페이지 할당자조차도 자기자신을 초기화하기 위해 메모리를 할당해야한다. 그러나 어떻게 물리 페이지 할당자가 자기자신을 위한 메모리를 할당할 수 있겠는가.
+이 문제를 해결하기위해, Boot Memory Allocator라고 불리는 특별한 할당자가 사용된다. 이것은 가장 기초적인 할당 방식인 First Fit 할당에 기반하며, free block의 연결 리스트 대신 비트맵을 사용하여 메모리를 표현한다.</description>
     </item>
+    
     <item>
       <title>Chapter 6 Physical Page Allocation</title>
       <link>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_6/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
       <guid>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_6/</guid>
-      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 6를 번역한 글입니다.&#xA;이 챕터에서는 리눅스에서 물리 페이지들이 어떻게 관리되고 할당되는지를 설명한다. 이에 관련하여 사용되는 주요 알고리즘은 Binary Buddy Allocator로, Knowlton이 고안했고, Knuth가 발전시켰다. 이 알고리즘은 다른 할당자들과 비교하였을 때 굉장히 빠른 성능을 보여준다.&#xA;이는 일반적인 2의 거듭제곱 할당자에 free 버퍼 합체 기술을 결합한 할당 scheme이며, 기본 컨셉은 꽤 간단하다. 메모리는 2의 거듭제곱의 페이지로 구성된 큰 페이지 블록들로 나누어진다. 만약 원하는 크기의 블록이 없는 경우, 큰 블록은 서로에게 buddy인 두 개의 블록으로 반으로 쪼개어진다.</description>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 6를 번역한 글입니다.
+ 이 챕터에서는 리눅스에서 물리 페이지들이 어떻게 관리되고 할당되는지를 설명한다. 이에 관련하여 사용되는 주요 알고리즘은 Binary Buddy Allocator로, Knowlton이 고안했고, Knuth가 발전시켰다. 이 알고리즘은 다른 할당자들과 비교하였을 때 굉장히 빠른 성능을 보여준다.
+이는 일반적인 2의 거듭제곱 할당자에 free 버퍼 합체 기술을 결합한 할당 scheme이며, 기본 컨셉은 꽤 간단하다. 메모리는 2의 거듭제곱의 페이지로 구성된 큰 페이지 블록들로 나누어진다.</description>
     </item>
+    
     <item>
       <title>Chapter 7  Non-Contiguous Memory Allocation</title>
       <link>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_7/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
       <guid>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_7/</guid>
-      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 7를 번역한 글입니다.&#xA;많은 양의 메모리를 물리적으로 연속된 페이지로 할당하는 것은 캐시와 메모리 접근 시간 관점에서 더 좋다. 그러나 불행하게도, 버디 할당자의 외부 단편화 문제로 인해, 이것이 항상 가능하지는 않다. 리눅스는 연속적이지 않은 물리 메모리를 연속된 가상 메모리에 사용할 수 있도록하는 메커니즘인 vmalloc()을 제공한다.&#xA;VMALLOC_START와 VMALLOC_END 사이의 가상 주소 공간이 예약된다. VMALLOC_START의 위치는 이용가능한 물리 메모리의 양에 따라 결정되지만, 영역의 크기는 최소한 VMALLOC_RESERVE 크기 (x86의 경우 128MiB) 이상으로 설정된다.</description>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 7를 번역한 글입니다.
+ 많은 양의 메모리를 물리적으로 연속된 페이지로 할당하는 것은 캐시와 메모리 접근 시간 관점에서 더 좋다. 그러나 불행하게도, 버디 할당자의 외부 단편화 문제로 인해, 이것이 항상 가능하지는 않다. 리눅스는 연속적이지 않은 물리 메모리를 연속된 가상 메모리에 사용할 수 있도록하는 메커니즘인 vmalloc()을 제공한다.
+VMALLOC_START와 VMALLOC_END 사이의 가상 주소 공간이 예약된다. VMALLOC_START의 위치는 이용가능한 물리 메모리의 양에 따라 결정되지만, 영역의 크기는 최소한 VMALLOC_RESERVE 크기 (x86의 경우 128MiB) 이상으로 설정된다.</description>
     </item>
+    
+    <item>
+      <title>Chapter 8  Slab Allocator</title>
+      <link>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_8/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://minlno.github.io/gorman_%EB%B2%88%EC%97%AD/chapter_8/</guid>
+      <description>이 글은 Gorman 책 &amp;ldquo;Understanding the Linux Virtual Memory Manager&amp;quot;의 Chapter 8를 번역한 글입니다.
+ 이번 장에서는 범용 목적의 할당자에 대해 설명한다. 그것은 바로 슬랩 할당자로, Solaris에서 사용되는 범용 커널 할당자와 굉장히 닮아있다. 리눅스의 구현은 Bonwick의 첫 슬랩 할당자 논문에 기반을 두어 구현되었고, 그의 다음 논문에 설명된 것과 유사한 많은 개선점이 포함된다. 우리는 먼저 할당자에 대한 빠른 오버뷰 설명을 한 후, 여러 구조체들에 대해 설명하고, 할당자의 각 작업들에 대해 깊이있는 설명을 할 것이다.</description>
+    </item>
+    
   </channel>
 </rss>
