@@ -6,7 +6,7 @@ categories: ["Gorman Book Translation"]
 categories_weight: 8
 ---
 
-이 글은 Gorman 책 "Understanding the Linux Virtual Memory Manager"의 [Chapte 8](https://www.kernel.org/doc/gorman/html/understand/understand011.html)를 번역한 글입니다.
+이 글은 Gorman 책 "Understanding the Linux Virtual Memory Manager"의 [Chapter 8](https://www.kernel.org/doc/gorman/html/understand/understand011.html)를 번역한 글입니다.
 
 ---
 
