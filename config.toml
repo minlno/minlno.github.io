@@ -1,28 +1,29 @@
-baseURL = "http://minlno.github.io/"
-languageCode = "en-kr"
-title = "김민호의 공부기록장"
-DefaultContentLanguage = "kr"
-enableRobotsTXT = true
-paginate = 10
-pygmentsStyle = "monokai"
-
-[params]
-  description = "A description of my website"
-  author = "Minho Kim"
-
-[taxonomies]
-  category = "categories"
-
-[menu]
-  [[menu.main]]
-    name = "Home"
-    url = "/"
-    weight = 1
-  [[menu.main]]
-    name = "Categories"
-    url = "/categories/"
-    weight = 2
+baseURL = "https://minlno.github.io"
+languageCode = "en-US"
+title = "Minho Kim"
+# Enable comments by entering your Disqus shortname
+disqusShortname = ""
+theme = "hugo-sustain"
 
 [permalinks]
-  posts = "/:year/:month/:day/:slug/"
+  post = "/:year/:month/:day/:slug"
 
+[params]
+  avatar = "images/JJang.jpg"
+  author = "Minho Kim"
+  description = "Minho Kim's Website"
+
+  # Custom assets can be linked with their paths relative to static/
+  custom_css = []
+  custom_js  = []
+
+[params.social]
+  Github        = "minlno"
+  Email         = "minho7571@gmail.com"
+
+## Main Menu
+[[menu.main]]
+  name = "blog"
+  weight = 100
+  identifier = "blog"
+  url = "/blog/"
