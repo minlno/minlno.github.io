@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -16,7 +16,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Minho Kim">
-    <link rel="shortcut icon" type="image/x-icon" href="http://localhost:1313/img/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://minlno.github.io/img/favicon.ico">
     <title>Chapter 5 Boot Memory Allocator | Minho Kim</title>
     <meta name="description" content="이 글은 Gorman 책 &ldquo;Understanding the Linux Virtual Memory Manager&quot;의 Chapter 5를 번역한 글입니다.
 하드웨어 구성의 조합의 수가 매우 많기 때문에, 컴파일 타임에 정적으로 핵심 커널 메모리 자료구조들을 초기화하는 것은 비현실적이다. 그러나 다음 장에서 설명할 물리 페이지 할당자조차도 자기자신을 초기화하기 위해 메모리를 할당해야한다. 그러나 어떻게 물리 페이지 할당자가 자기자신을 위한 메모리를 할당할 수 있겠는가.
@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old">
     
-      <link rel="stylesheet" href="http://localhost:1313/css/style.css">
+      <link rel="stylesheet" href="https://minlno.github.io/css/style.css">
     
     <!--[if lt IE 9]>
 			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -40,7 +40,7 @@
   <div class="container mb-3">
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-      <a class="navbar-brand" href="http://localhost:1313/">
+      <a class="navbar-brand" href="https://minlno.github.io/">
         <i class="fa fa-home"></i>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar">
@@ -64,7 +64,7 @@
 
 
   <div class="container">
-    <h3 class="mt-3"><b><a href="http://localhost:1313/blog/gorman_book_translation/chapter_5/">Chapter 5 Boot Memory Allocator</a></b></h3>
+    <h3 class="mt-3"><b><a href="https://minlno.github.io/blog/gorman_book_translation/chapter_5/">Chapter 5 Boot Memory Allocator</a></b></h3>
     <div class="blog-title my-4">
       <h6>
         May 20, 2024

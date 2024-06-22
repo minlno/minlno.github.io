@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on Minho Kim</title>
-    <link>http://localhost:1313/categories/</link>
+    <link>https://minlno.github.io/categories/</link>
     <description>Recent content in Categories on Minho Kim</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Sat, 08 Jun 2024 02:10:54 +0900</lastBuildDate>
-    <atom:link href="http://localhost:1313/categories/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 22 Jun 2024 02:10:54 +0900</lastBuildDate>
+    <atom:link href="https://minlno.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Gorman Book Translation</title>
-      <link>http://localhost:1313/categories/gorman-book-translation/</link>
-      <pubDate>Sat, 08 Jun 2024 02:10:54 +0900</pubDate>
-      <guid>http://localhost:1313/categories/gorman-book-translation/</guid>
+      <link>https://minlno.github.io/categories/gorman-book-translation/</link>
+      <pubDate>Sat, 22 Jun 2024 02:10:54 +0900</pubDate>
+      <guid>https://minlno.github.io/categories/gorman-book-translation/</guid>
       <description></description>
     </item>
   </channel>

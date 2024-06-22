@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -16,7 +16,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Minho Kim">
-    <link rel="shortcut icon" type="image/x-icon" href="http://localhost:1313/img/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://minlno.github.io/img/favicon.ico">
     <title>Chapter 2 Describing Physical Memory | Minho Kim</title>
     <meta name="description" content="이 글은 Gorman 책 &ldquo;Understanding the Linux Virtual Memory Manager&quot;의 Chapter 2를 번역한 글입니다.
 수많은 아키텍처들이 리눅스를 사용하기 때문에, 메모리를 특정 아키텍처와 상관없이 독립적으로 설명할 수 있는 방법이 필요하다. 이 장에서는 메모리 뱅크, 페이지 및 VM(Virtual Memory) 동작에 영향을 미치는 플래그를 설명하는 데 사용되는 구조체에 대해 설명한다.
@@ -27,7 +27,7 @@ VM에서 첫 주요 개념은 Non-Uniform Memory Access(NUMA)이다. 큰 스케�
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old">
     
-      <link rel="stylesheet" href="http://localhost:1313/css/style.css">
+      <link rel="stylesheet" href="https://minlno.github.io/css/style.css">
     
     <!--[if lt IE 9]>
 			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -40,7 +40,7 @@ VM에서 첫 주요 개념은 Non-Uniform Memory Access(NUMA)이다. 큰 스케�
   <div class="container mb-3">
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-      <a class="navbar-brand" href="http://localhost:1313/">
+      <a class="navbar-brand" href="https://minlno.github.io/">
         <i class="fa fa-home"></i>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar">
@@ -64,7 +64,7 @@ VM에서 첫 주요 개념은 Non-Uniform Memory Access(NUMA)이다. 큰 스케�
 
 
   <div class="container">
-    <h3 class="mt-3"><b><a href="http://localhost:1313/blog/gorman_book_translation/chapter_2/">Chapter 2 Describing Physical Memory</a></b></h3>
+    <h3 class="mt-3"><b><a href="https://minlno.github.io/blog/gorman_book_translation/chapter_2/">Chapter 2 Describing Physical Memory</a></b></h3>
     <div class="blog-title my-4">
       <h6>
         May 17, 2024
@@ -259,8 +259,8 @@ VM에서 첫 주요 개념은 Non-Uniform Memory Access(NUMA)이다. 큰 스케�
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-346172598">
-  <table class="table " id="346172598" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-346172598" itemprop="about">Table 2.1: Flags Describing Page Status</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-591743628">
+  <table class="table " id="591743628" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-591743628" itemprop="about">Table 2.1: Flags Describing Page Status</caption>
 <thead>
 <tr>
 <th><strong>Bit name</strong></th>
@@ -349,8 +349,8 @@ VM에서 첫 주요 개념은 Non-Uniform Memory Access(NUMA)이다. 큰 스케�
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-864251973">
-  <table class="table " id="864251973" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-864251973" itemprop="about">Table 2.2: Macros For Testing, Setting and Clearing page→flags Status Bits</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-238975614">
+  <table class="table " id="238975614" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-238975614" itemprop="about">Table 2.2: Macros For Testing, Setting and Clearing page→flags Status Bits</caption>
 <thead>
 <tr>
 <th><strong>Bit name</strong></th>

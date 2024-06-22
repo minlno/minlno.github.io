@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -16,7 +16,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Minho Kim">
-    <link rel="shortcut icon" type="image/x-icon" href="http://localhost:1313/img/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://minlno.github.io/img/favicon.ico">
     <title>Chapter 6 Physical Page Allocation | Minho Kim</title>
     <meta name="description" content="이 글은 Gorman 책 &ldquo;Understanding the Linux Virtual Memory Manager&quot;의 Chapter 6를 번역한 글입니다.
 이 챕터에서는 리눅스에서 물리 페이지들이 어떻게 관리되고 할당되는지를 설명한다. 이에 관련하여 사용되는 주요 알고리즘은 Binary Buddy Allocator로, Knowlton이 고안했고, Knuth가 발전시켰다. 이 알고리즘은 다른 할당자들과 비교하였을 때 굉장히 빠른 성능을 보여준다.
@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old">
     
-      <link rel="stylesheet" href="http://localhost:1313/css/style.css">
+      <link rel="stylesheet" href="https://minlno.github.io/css/style.css">
     
     <!--[if lt IE 9]>
 			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -40,7 +40,7 @@
   <div class="container mb-3">
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-      <a class="navbar-brand" href="http://localhost:1313/">
+      <a class="navbar-brand" href="https://minlno.github.io/">
         <i class="fa fa-home"></i>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar">
@@ -64,7 +64,7 @@
 
 
   <div class="container">
-    <h3 class="mt-3"><b><a href="http://localhost:1313/blog/gorman_book_translation/chapter_6/">Chapter 6 Physical Page Allocation</a></b></h3>
+    <h3 class="mt-3"><b><a href="https://minlno.github.io/blog/gorman_book_translation/chapter_6/">Chapter 6 Physical Page Allocation</a></b></h3>
     <div class="blog-title my-4">
       <h6>
         May 23, 2024
@@ -120,8 +120,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-845379261">
-  <table class="table " id="845379261" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-845379261" itemprop="about">Table 6.1: Physical Pages Allocation API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-579182346">
+  <table class="table " id="579182346" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-579182346" itemprop="about">Table 6.1: Physical Pages Allocation API</caption>
 <thead>
 <tr>
 <th></th>
@@ -200,8 +200,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-391786254">
-  <table class="table " id="391786254" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-391786254" itemprop="about">Table 6.2: Physical Pages Free API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-791824365">
+  <table class="table " id="791824365" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-791824365" itemprop="about">Table 6.2: Physical Pages Free API</caption>
 <thead>
 <tr>
 <th></th>
@@ -265,8 +265,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-187695234">
-  <table class="table " id="187695234" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-187695234" itemprop="about">Table 6.3: Low Level GFP Flags Affecting Zone Allocation</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-249385617">
+  <table class="table " id="249385617" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-249385617" itemprop="about">Table 6.3: Low Level GFP Flags Affecting Zone Allocation</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -310,8 +310,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-361948275">
-  <table class="table " id="361948275" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-361948275" itemprop="about">Table 6.4: Low Level GFP Flags Affecting Affecting Allocator behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-362718495">
+  <table class="table " id="362718495" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-362718495" itemprop="about">Table 6.4: Low Level GFP Flags Affecting Affecting Allocator behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -363,8 +363,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-276935418">
-  <table class="table " id="276935418" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-276935418" itemprop="about">Table 6.5: Low Level GFP Flag Combinations For High Level Use</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-126834795">
+  <table class="table " id="126834795" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-126834795" itemprop="about">Table 6.5: Low Level GFP Flag Combinations For High Level Use</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -431,8 +431,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-714538629">
-  <table class="table " id="714538629" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-714538629" itemprop="about">Table 6.6: High Level GFP Flags Affecting Allocator Behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-927348156">
+  <table class="table " id="927348156" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-927348156" itemprop="about">Table 6.6: High Level GFP Flags Affecting Allocator Behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>
@@ -501,8 +501,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-892316547">
-  <table class="table " id="892316547" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-892316547" itemprop="about">Table 6.7: Process Flags Affecting Allocator behaviour</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-192354768">
+  <table class="table " id="192354768" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-192354768" itemprop="about">Table 6.7: Process Flags Affecting Allocator behaviour</caption>
 <thead>
 <tr>
 <th>Flag</th>

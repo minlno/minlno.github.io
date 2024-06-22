@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -16,7 +16,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Minho Kim">
-    <link rel="shortcut icon" type="image/x-icon" href="http://localhost:1313/img/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://minlno.github.io/img/favicon.ico">
     <title>Chapter 4 Process Address Space | Minho Kim</title>
     <meta name="description" content="이 글은 Gorman 책 &ldquo;Understanding the Linux Virtual Memory Manager&quot;의 Chapter 4를 번역한 글입니다.
 가상 메모리의 주요 이점 중 하나는 각각의 프로세스들이 물리 메모리에 매핑되는 자신만의 가상 주소 공간을 가진다는 것이다. 이 장에서 우리는 프로세스의 주소 공간과 리눅스가 이것을 관리하는 방법에 대해 다룰 것이다.
@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old">
     
-      <link rel="stylesheet" href="http://localhost:1313/css/style.css">
+      <link rel="stylesheet" href="https://minlno.github.io/css/style.css">
     
     <!--[if lt IE 9]>
 			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -40,7 +40,7 @@
   <div class="container mb-3">
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-      <a class="navbar-brand" href="http://localhost:1313/">
+      <a class="navbar-brand" href="https://minlno.github.io/">
         <i class="fa fa-home"></i>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar">
@@ -64,7 +64,7 @@
 
 
   <div class="container">
-    <h3 class="mt-3"><b><a href="http://localhost:1313/blog/gorman_book_translation/chapter_4/">Chapter 4 Process Address Space</a></b></h3>
+    <h3 class="mt-3"><b><a href="https://minlno.github.io/blog/gorman_book_translation/chapter_4/">Chapter 4 Process Address Space</a></b></h3>
     <div class="blog-title my-4">
       <h6>
         May 19, 2024
@@ -110,8 +110,8 @@
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-471692835">
-  <table class="table " id="471692835" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-471692835" itemprop="about">Table 4.1: System Calls Related to Memory Regions</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-386457291">
+  <table class="table " id="386457291" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-386457291" itemprop="about">Table 4.1: System Calls Related to Memory Regions</caption>
 <thead>
 <tr>
 <th>시스템 콜</th>
@@ -234,8 +234,8 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-653248791">
-  <table class="table " id="653248791" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-653248791" itemprop="about">Table 4.2: Functions related to memory region descriptors</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-213596748">
+  <table class="table " id="213596748" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-213596748" itemprop="about">Table 4.2: Functions related to memory region descriptors</caption>
 <thead>
 <tr>
 <th>함수</th>
@@ -587,8 +587,8 @@ context: 아키텍처 의존적인 MMU context이다.</li>
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-971586234">
-  <table class="table " id="971586234" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-971586234" itemprop="about">Table 4.4: Reasons For Page Faulting</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-658793124">
+  <table class="table " id="658793124" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-658793124" itemprop="about">Table 4.4: Reasons For Page Faulting</caption>
 <thead>
 <tr>
 <th>Exception</th>

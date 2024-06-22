@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DW95HBTSYY"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -16,7 +16,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Minho Kim">
-    <link rel="shortcut icon" type="image/x-icon" href="http://localhost:1313/img/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://minlno.github.io/img/favicon.ico">
     <title>Chapter 7  Non-Contiguous Memory Allocation | Minho Kim</title>
     <meta name="description" content="이 글은 Gorman 책 &ldquo;Understanding the Linux Virtual Memory Manager&quot;의 Chapter 7를 번역한 글입니다.
 많은 양의 메모리를 물리적으로 연속된 페이지로 할당하는 것은 캐시와 메모리 접근 시간 관점에서 더 좋다. 그러나 불행하게도, 버디 할당자의 외부 단편화 문제로 인해, 이것이 항상 가능하지는 않다. 리눅스는 연속적이지 않은 물리 메모리를 연속된 가상 메모리에 사용할 수 있도록하는 메커니즘인 vmalloc()을 제공한다.
@@ -27,7 +27,7 @@ VMALLOC_START와 VMALLOC_END 사이의 가상 주소 공간이 예약된다. VMA
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old">
     
-      <link rel="stylesheet" href="http://localhost:1313/css/style.css">
+      <link rel="stylesheet" href="https://minlno.github.io/css/style.css">
     
     <!--[if lt IE 9]>
 			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -40,7 +40,7 @@ VMALLOC_START와 VMALLOC_END 사이의 가상 주소 공간이 예약된다. VMA
   <div class="container mb-3">
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-      <a class="navbar-brand" href="http://localhost:1313/">
+      <a class="navbar-brand" href="https://minlno.github.io/">
         <i class="fa fa-home"></i>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar">
@@ -64,7 +64,7 @@ VMALLOC_START와 VMALLOC_END 사이의 가상 주소 공간이 예약된다. VMA
 
 
   <div class="container">
-    <h3 class="mt-3"><b><a href="http://localhost:1313/blog/gorman_book_translation/chapter_7/">Chapter 7  Non-Contiguous Memory Allocation</a></b></h3>
+    <h3 class="mt-3"><b><a href="https://minlno.github.io/blog/gorman_book_translation/chapter_7/">Chapter 7  Non-Contiguous Memory Allocation</a></b></h3>
     <div class="blog-title my-4">
       <h6>
         May 29, 2024
@@ -123,8 +123,8 @@ VMALLOC_START와 VMALLOC_END 사이의 가상 주소 공간이 예약된다. VMA
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-618947532">
-  <table class="table " id="618947532" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-618947532" itemprop="about">Table 7.1: Non-Contiguous Memory Allocation API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-214763958">
+  <table class="table " id="214763958" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-214763958" itemprop="about">Table 7.1: Non-Contiguous Memory Allocation API</caption>
 <thead>
 <tr>
 <th></th>
@@ -184,8 +184,8 @@ VMALLOC_START와 VMALLOC_END 사이의 가상 주소 공간이 예약된다. VMA
 
 
 
-<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-391768254">
-  <table class="table " id="391768254" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-391768254" itemprop="about">Table 7.2: Non-Contiguous Memory Free API</caption>
+<div class="table-wrapper" role="region" tabindex="0" aria-labelledby="table-caption-463125978">
+  <table class="table " id="463125978" itemscope itemtype="https://schema.org/Table"><caption id="table-caption-463125978" itemprop="about">Table 7.2: Non-Contiguous Memory Free API</caption>
 <thead>
 <tr>
 <th></th>
